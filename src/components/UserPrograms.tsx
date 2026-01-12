@@ -17,6 +17,7 @@ import {
   ShieldIcon,
 } from "lucide-react";
 import { USER_PROGRAMS } from "@/constants";
+import Image from "next/image";
 
 const UserPrograms = () => {
   return (

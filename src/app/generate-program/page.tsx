@@ -89,6 +89,26 @@ const GenerateProgramPage = () => {
       setIsSpeaking(false);
     };
     const handleMessage = (message: any) => {
+      if (message.type === "tool-call") {
+        console.log("TOOL NAME:", message.toolName);
+        console.log("TOOL ARGUMENTS:", message.arguments);
+        // if (message.toolName === "createFitnessPlan") {
+        //   try {
+        //     createFitnessPlan({
+        //       userId: user!.id,
+        //       name: message.arguments.name,
+        //       workoutPlan: message.arguments.workoutPlan,
+        //       dietPlan: message.arguments.dietPlan,
+        //       isActive: true,
+        //     });
+
+        //     vapi.stop();
+        //   } catch (err) {
+        //     console.error("Failed to save fitness plan", err);
+        //   }
+        // }
+        return;
+      }
       if (message.type === "transcript" && message.transcriptType === "final") {
         const newMessage = { content: message.transcript, role: message.role };
         setMessages((prev) => [...prev, newMessage]);
@@ -133,7 +153,7 @@ const GenerateProgramPage = () => {
           ? `${user.firstName} ${user.lastName || ""}`.trim()
           : "There";
 
-        await vapi.start(process.env.NEXT_PUBLIC_VAPI_WORKFLOW_ID!, {
+        await vapi.start(process.env.NEXT_PUBLIC_VAPI_ASSISTANT_ID!, {
           variableValues: {
             full_name: fullName,
             user_id: user?.id,
@@ -216,7 +236,7 @@ const GenerateProgramPage = () => {
                 />
 
                 <div className="relative w-full h-full rounded-full bg-card flex items-center justify-center border border-border overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-b from-primary/10 to-secondary/10"></div>
+                  <div className="absolute inset-0 bg-linear-to-b from-primary/10 to-secondary/10"></div>
                   <img
                     src="/beymax.png"
                     alt="AI Assistant"
