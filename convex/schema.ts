@@ -47,19 +47,14 @@ export default defineSchema({
 
   routines: defineTable({
     userId: v.string(),
-    name: v.string(),
-    exercises: v.array(
-      v.object({
-        name: v.string(),
-        sets: v.array(
-          v.object({
-            type: v.string(),
-            // number: v.number();
-            weight: v.optional(v.string()),
-            reps: v.number(),
-          })
-        ),
-      })
-    ),
-  }),
+    date: v.string(),
+    pushups: v.number(),
+    weightlifts: v.number(),
+    cardio: v.number(),
+    custom: v.number(),
+    volume: v.number(),
+    createdAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_user_date", ["userId", "date"]),
 });
