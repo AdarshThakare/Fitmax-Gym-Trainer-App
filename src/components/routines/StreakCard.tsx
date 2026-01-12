@@ -26,7 +26,7 @@ const StreakCard = ({
             <h3 className="font-mono font-bold text-2xl text-primary">
               {streak} DAY STREAK
             </h3>
-            <p className="text-sm text-muted-foreground">Keep it going! 🔥</p>
+            <p className="text-sm text-muted-foreground">Keep it going!</p>
           </div>
         </div>
 

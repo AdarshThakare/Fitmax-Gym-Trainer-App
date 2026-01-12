@@ -19,7 +19,7 @@ const CardioSection = ({ sets, onAdd, onRemove, onUpdate }: Props) => {
             key={index}
             label={`SET ${index + 1}`}
             value={set.reps}
-            placeholder="Distance (m)"
+            placeholder="Duration (min)"
             onChange={(v) => onUpdate(index, v)}
             onRemove={sets.length > 1 ? () => onRemove(index) : undefined}
           />
