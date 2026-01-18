@@ -12,6 +12,7 @@ import StreakCard from "@/components/routines/StreakCard";
 import AnalyticsPanel from "@/components/routines/AnalyticsPanel";
 import CustomExercisesSection from "@/components/routines/CustomExercisesSection";
 import CardioSection from "@/components/routines/CardioSection";
+import { toast } from "sonner";
 
 // Types
 interface ExerciseSet {
@@ -80,7 +81,7 @@ const RoutinesPage = () => {
     const streak = parseInt(localStorage.getItem("fitnessStreak") || "0");
     const last = localStorage.getItem("lastActiveDate") || "";
     const activity = JSON.parse(
-      localStorage.getItem("monthlyActivity") || "{}"
+      localStorage.getItem("monthlyActivity") || "{}",
     );
     const logs = JSON.parse(localStorage.getItem("dailyLogCounts") || "{}");
 
@@ -90,10 +91,10 @@ const RoutinesPage = () => {
     setDailyLogCounts(logs);
 
     const savedProgress = JSON.parse(
-      localStorage.getItem("workoutProgress") || "[]"
+      localStorage.getItem("workoutProgress") || "[]",
     );
     const savedVolume = JSON.parse(
-      localStorage.getItem("volumeProgress") || "[]"
+      localStorage.getItem("volumeProgress") || "[]",
     );
 
     setProgressData(savedProgress.slice(-14));
@@ -143,7 +144,7 @@ const RoutinesPage = () => {
           `}
         >
           {day}
-        </div>
+        </div>,
       );
     }
 
@@ -196,18 +197,14 @@ const RoutinesPage = () => {
       cardio: cardioSets.reduce((s, x) => s + x.reps, 0),
       custom: customExercises.reduce(
         (s, ex) => s + ex.sets.reduce((a, b) => a + b.reps, 0),
-        0
+        0,
       ),
     };
-
-    const updatedProgress = [...progressData, newProgress].slice(-14);
-    setProgressData(updatedProgress);
-    localStorage.setItem("workoutProgress", JSON.stringify(updatedProgress));
 
     const volume =
       weightliftSets.reduce(
         (s, x) => s + (parseFloat(x.weight || "0") || 0) * x.reps,
-        0
+        0,
       ) +
       customExercises.reduce((s, ex) => {
         if (ex.type !== "weighted") return s;
@@ -215,36 +212,74 @@ const RoutinesPage = () => {
           s +
           ex.sets.reduce(
             (a, b) => a + (parseFloat(b.weight || "0") || 0) * b.reps,
-            0
+            0,
           )
         );
       }, 0);
 
-    const updatedVolume = [
-      ...volumeData,
-      {
-        date: newProgress.date,
-        volume,
-      },
-    ].slice(-7);
+    // ✅ cumulative update if same day exists, else push new day
+    const existingIndex = progressData.findIndex(
+      (p) => p.date === newProgress.date,
+    );
+
+    let updatedProgress: ProgressData[] = [];
+    let updatedVolume: VolumeData[] = [];
+
+    if (existingIndex !== -1) {
+      updatedProgress = [...progressData];
+      updatedProgress[existingIndex] = {
+        ...updatedProgress[existingIndex],
+        pushups: updatedProgress[existingIndex].pushups + newProgress.pushups,
+        weightlifts:
+          updatedProgress[existingIndex].weightlifts + newProgress.weightlifts,
+        cardio: updatedProgress[existingIndex].cardio + newProgress.cardio,
+        custom: updatedProgress[existingIndex].custom + newProgress.custom,
+      };
+
+      updatedVolume = [...volumeData];
+      if (updatedVolume[existingIndex]) {
+        updatedVolume[existingIndex] = {
+          ...updatedVolume[existingIndex],
+          volume: updatedVolume[existingIndex].volume + volume,
+        };
+      } else {
+        // fallback (just in case arrays mismatch)
+        updatedVolume.push({ date: newProgress.date, volume });
+      }
+    } else {
+      updatedProgress = [...progressData, newProgress].slice(-14);
+      updatedVolume = [...volumeData, { date: newProgress.date, volume }].slice(
+        -7,
+      );
+    }
+
+    setProgressData(updatedProgress);
+    localStorage.setItem("workoutProgress", JSON.stringify(updatedProgress));
 
     setVolumeData(updatedVolume);
     localStorage.setItem("volumeProgress", JSON.stringify(updatedVolume));
 
-    alert("Routine logged successfully! 🎉");
+    // ✅ reset all inputs after submit
+    setPushupSets([{ reps: 0, type: "bodyweight" }]);
+    setWeightliftSets([{ reps: 0, weight: "", type: "weighted" }]);
+    setCardioSets([{ reps: 0, type: "duration" }]);
+    setCustomExercises([]);
+
+    // ✅ toast instead of alert
+    toast.success("Routine logged successfully!");
   };
 
   const hasAnyActivity = () => {
     const hasPushups = pushupSets.some((s) => s.reps > 0);
 
     const hasWeightlifts = weightliftSets.some(
-      (s) => s.reps > 0 && parseFloat(s.weight || "0") > 0
+      (s) => s.reps > 0 && parseFloat(s.weight || "0") > 0,
     );
 
     const hasCardio = cardioSets.some((s) => s.reps > 0);
 
     const hasCustom = customExercises.some((ex) =>
-      ex.sets.some((s) => s.reps > 0)
+      ex.sets.some((s) => s.reps > 0),
     );
 
     return hasPushups || hasWeightlifts || hasCardio || hasCustom;
@@ -367,8 +402,8 @@ const RoutinesPage = () => {
                             : { reps: 0, type: ex.type },
                         ],
                       }
-                    : ex
-                )
+                    : ex,
+                ),
               )
             }
             onRemoveSet={(id, i) =>
@@ -376,8 +411,8 @@ const RoutinesPage = () => {
                 customExercises.map((ex) =>
                   ex.id === id
                     ? { ...ex, sets: ex.sets.filter((_, x) => x !== i) }
-                    : ex
-                )
+                    : ex,
+                ),
               )
             }
             onUpdateSet={(id, i, f, v) =>
@@ -392,11 +427,11 @@ const RoutinesPage = () => {
                                 ...s,
                                 [f]: f === "reps" ? parseInt(v) || 0 : v,
                               }
-                            : s
+                            : s,
                         ),
                       }
-                    : ex
-                )
+                    : ex,
+                ),
               )
             }
           />
