@@ -1,6 +1,6 @@
 import SectionWrapper from "./SectionWrapper";
 import AddSetButton from "./AddSetButton";
-import { Activity, Trash } from "lucide-react";
+import { Dumbbell, Trash } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
@@ -18,7 +18,7 @@ interface Props {
 
 const WeightLiftSection = ({ sets, onAdd, onRemove, onUpdate }: Props) => {
   return (
-    <SectionWrapper title="WEIGHT LIFTS" icon={Activity}>
+    <SectionWrapper title="WEIGHT LIFTS" icon={Dumbbell}>
       <div className="space-y-3">
         {sets.map((set, index) => (
           <div key={index} className="flex gap-2 items-center">

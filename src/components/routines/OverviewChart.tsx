@@ -1,13 +1,4 @@
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-} from "recharts";
+import ReactECharts from "echarts-for-react";
 
 interface Props {
   data: any[];
@@ -22,26 +13,97 @@ const OverviewChart = ({ data }: Props) => {
     );
   }
 
+  const xAxisData = data.map((item) => item.date);
+  const pushupsData = data.map((item) => item.pushups);
+  const weightliftsData = data.map((item) => item.weightlifts);
+  const cardioData = data.map((item) => item.cardio);
+  const customData = data.map((item) => item.custom);
+
+  const options = {
+    tooltip: {
+      trigger: 'axis',
+      backgroundColor: '#1a1a1a',
+      borderColor: '#333',
+      textStyle: { color: '#fff' },
+    },
+    legend: {
+      data: ['Pushups', 'Weight Lifts', 'Cardio', 'Custom'],
+      textStyle: { color: '#888' },
+    },
+    grid: {
+      left: '3%',
+      right: '4%',
+      bottom: '15%', // Make room for dataZoom
+      containLabel: true,
+    },
+    xAxis: {
+      type: 'category',
+      boundaryGap: false,
+      data: xAxisData,
+      axisLine: { lineStyle: { color: '#888' } },
+    },
+    yAxis: {
+      type: 'value',
+      splitLine: { lineStyle: { color: '#333', type: 'dashed' } },
+      axisLine: { lineStyle: { color: '#888' } },
+    },
+    dataZoom: [
+      {
+        type: 'inside',
+        xAxisIndex: [0],
+        start: 0,
+        end: 100
+      }
+    ],
+    series: [
+      {
+        name: 'Pushups',
+        type: 'line',
+        smooth: true,
+        data: pushupsData,
+        itemStyle: { color: '#8b5cf6' },
+        areaStyle: {
+          color: 'rgba(139, 92, 246, 0.1)'
+        }
+      },
+      {
+        name: 'Weight Lifts',
+        type: 'line',
+        smooth: true,
+        data: weightliftsData,
+        itemStyle: { color: '#3b82f6' },
+        areaStyle: {
+          color: 'rgba(59, 130, 246, 0.1)'
+        }
+      },
+      {
+        name: 'Cardio',
+        type: 'line',
+        smooth: true,
+        data: cardioData,
+        itemStyle: { color: '#ef4444' },
+        areaStyle: {
+          color: 'rgba(239, 68, 68, 0.1)'
+        }
+      },
+      {
+        name: 'Custom',
+        type: 'line',
+        smooth: true,
+        data: customData,
+        itemStyle: { color: '#10b981' },
+      }
+    ]
+  };
+
   return (
-    <ResponsiveContainer width="100%" height={300}>
-      <LineChart data={data}>
-        <CartesianGrid strokeDasharray="3 3" stroke="#333" />
-        <XAxis dataKey="date" stroke="#888" />
-        <YAxis stroke="#888" />
-        <Tooltip
-          contentStyle={{
-            backgroundColor: "#1a1a1a",
-            border: "1px solid #333",
-            borderRadius: "8px",
-          }}
-        />
-        <Legend />
-        <Line type="monotone" dataKey="pushups" stroke="#8b5cf6" />
-        <Line type="monotone" dataKey="weightlifts" stroke="#3b82f6" />
-        <Line type="monotone" dataKey="cardio" stroke="#ef4444" />
-        <Line type="monotone" dataKey="custom" stroke="#10b981" />
-      </LineChart>
-    </ResponsiveContainer>
+    <div className="w-full h-[350px]">
+      <ReactECharts
+        option={options}
+        style={{ height: '100%', width: '100%' }}
+        opts={{ renderer: 'svg' }}
+      />
+    </div>
   );
 };
 

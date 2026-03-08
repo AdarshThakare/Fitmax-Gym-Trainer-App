@@ -1,7 +1,7 @@
 import SectionWrapper from "./SectionWrapper";
 import SetRow from "./SetRow";
 import AddSetButton from "./AddSetButton";
-import { Dumbbell } from "lucide-react";
+import { Activity } from "lucide-react";
 
 interface Props {
   sets: { reps: number }[];
@@ -12,7 +12,7 @@ interface Props {
 
 const PushupSection = ({ sets, onAdd, onRemove, onUpdate }: Props) => {
   return (
-    <SectionWrapper title="PUSH-UPS" icon={Dumbbell}>
+    <SectionWrapper title="PUSH-UPS" icon={Activity}>
       <div className="space-y-3">
         {sets.map((set, index) => (
           <SetRow

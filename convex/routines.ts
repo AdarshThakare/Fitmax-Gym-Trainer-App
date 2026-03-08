@@ -12,24 +12,11 @@ export const saveRoutine = mutation({
     volume: v.number(),
   },
   handler: async (ctx, args) => {
-    const existing = await ctx.db
-      .query("routines")
-      .withIndex("by_user_date", (q) =>
-        q.eq("userId", args.userId).eq("date", args.date)
-      )
-      .first();
-
-    if (existing) {
-      await ctx.db.patch(existing._id, {
-        ...args,
-        createdAt: Date.now(),
-      });
-    } else {
-      await ctx.db.insert("routines", {
-        ...args,
-        createdAt: Date.now(),
-      });
-    }
+    await ctx.db.insert("routines", {
+      ...args,
+      logCount: 1,
+      createdAt: Date.now(),
+    });
   },
 });
 

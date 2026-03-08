@@ -53,6 +53,7 @@ export default defineSchema({
     cardio: v.number(),
     custom: v.number(),
     volume: v.number(),
+    logCount: v.optional(v.number()),
     createdAt: v.number(),
   })
     .index("by_user", ["userId"])

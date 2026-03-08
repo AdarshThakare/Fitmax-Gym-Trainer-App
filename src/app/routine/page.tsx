@@ -1,6 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useUser } from "@clerk/nextjs";
+import { useQuery, useMutation } from "convex/react";
+import { api } from "../../../convex/_generated/api";
 
 // UI
 import { Button } from "@/components/ui/button";
@@ -53,6 +56,11 @@ interface DailyLogCounts {
 
 const RoutinesPage = () => {
   const [currentDate] = useState(new Date());
+  const { user, isLoaded: isUserLoaded } = useUser();
+  const userId = user?.id as string;
+
+  const routines = useQuery(api.routines.getUserRoutines, userId ? { userId } : "skip");
+  const saveRoutine = useMutation(api.routines.saveRoutine);
 
   const [streak, setStreak] = useState(0);
   const [lastActiveDate, setLastActiveDate] = useState("");
@@ -76,130 +84,118 @@ const RoutinesPage = () => {
   const [progressData, setProgressData] = useState<ProgressData[]>([]);
   const [volumeData, setVolumeData] = useState<VolumeData[]>([]);
 
-  // Load persisted data
+  // Load data from Convex
   useEffect(() => {
-    const streak = parseInt(localStorage.getItem("fitnessStreak") || "0");
-    const last = localStorage.getItem("lastActiveDate") || "";
-    const activity = JSON.parse(
-      localStorage.getItem("monthlyActivity") || "{}",
-    );
-    const logs = JSON.parse(localStorage.getItem("dailyLogCounts") || "{}");
+    if (routines === undefined) return;
 
-    setStreak(streak);
-    setLastActiveDate(last);
-    setMonthlyActivity(activity);
-    setDailyLogCounts(logs);
+    const reverseRoutines = [...routines].reverse(); // Sort oldest to newest
 
-    const savedProgress = JSON.parse(
-      localStorage.getItem("workoutProgress") || "[]",
-    );
-    const savedVolume = JSON.parse(
-      localStorage.getItem("volumeProgress") || "[]",
-    );
+    let newStreak = 0;
+    let newLastActive = "";
+    const newMonthlyActivity: MonthlyActivity = {};
+    const newDailyLogCounts: DailyLogCounts = {};
+    const newProgressDict: Record<string, ProgressData> = {};
+    const newVolumeDict: Record<string, VolumeData> = {};
 
-    setProgressData(savedProgress.slice(-14));
-    setVolumeData(savedVolume.slice(-7));
-  }, []);
+    let lastDateObj: Date | null = null;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
-  // Calendar helpers
-  const getDaysInMonth = () => {
-    const y = currentDate.getFullYear();
-    const m = currentDate.getMonth();
-    return {
-      firstDay: new Date(y, m, 1).getDay(),
-      daysInMonth: new Date(y, m + 1, 0).getDate(),
-    };
-  };
+    for (const r of reverseRoutines) {
+      const d = new Date(r.date);
+      d.setHours(0, 0, 0, 0);
 
-  const getBrightnessClass = (count: number) => {
-    if (count >= 4) return "bg-primary text-white font-bold";
-    if (count === 3) return "bg-primary/80 text-white font-bold";
-    if (count === 2) return "bg-primary/50 text-primary font-bold";
-    if (count === 1) return "bg-primary/20 text-primary font-bold";
-    return "text-muted-foreground";
-  };
+      const mKey = `${d.getFullYear()}-${d.getMonth()}`;
+      const day = d.getDate();
 
-  const renderCalendar = () => {
-    const { firstDay, daysInMonth } = getDaysInMonth();
-    const monthKey = `${currentDate.getFullYear()}-${currentDate.getMonth()}`;
-    const activity = monthlyActivity[monthKey] || [];
+      if (!newMonthlyActivity[mKey]) newMonthlyActivity[mKey] = {};
+      newMonthlyActivity[mKey][day] = true;
 
-    const days = [];
+      const logKey = `${mKey}-${day}`;
+      newDailyLogCounts[logKey] = r.logCount || 1;
 
-    for (let i = 0; i < firstDay; i++) {
-      days.push(<div key={`e-${i}`} className="h-10" />);
-    }
+      // For streak calculation
+      if (lastDateObj) {
+        const diffTime = Math.abs(d.getTime() - lastDateObj.getTime());
+        const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+        if (diffDays === 1) {
+          newStreak++;
+        } else if (diffDays > 1) {
+          newStreak = 1;
+        }
+      } else {
+        newStreak = 1;
+      }
+      lastDateObj = d;
+      newLastActive = r.date;
 
-    for (let day = 1; day <= daysInMonth; day++) {
-      const isToday = day === currentDate.getDate();
-      const logKey = `${monthKey}-${day}`;
-      const count = dailyLogCounts[logKey] || 0;
-
-      days.push(
-        <div
-          key={day}
-          className={`h-10 flex items-center justify-center rounded font-mono text-sm
-            ${isToday ? "border-2 border-primary" : ""}
-            ${activity[day] ? getBrightnessClass(count) : "text-muted-foreground"}
-          `}
-        >
-          {day}
-        </div>,
-      );
-    }
-
-    return days;
-  };
-
-  // Save routine
-  const handleSubmitRoutine = () => {
-    const today = new Date().toDateString();
-    const yesterday = new Date(Date.now() - 86400000).toDateString();
-
-    let newStreak = streak;
-    if (lastActiveDate === yesterday) newStreak++;
-    else if (lastActiveDate !== today) newStreak = 1;
-
-    setStreak(newStreak);
-    setLastActiveDate(today);
-    localStorage.setItem("fitnessStreak", newStreak.toString());
-    localStorage.setItem("lastActiveDate", today);
-
-    const monthKey = `${currentDate.getFullYear()}-${currentDate.getMonth()}`;
-    const dayKey = currentDate.getDate();
-
-    const updatedActivity = {
-      ...monthlyActivity,
-      [monthKey]: {
-        ...(monthlyActivity[monthKey] || {}),
-        [dayKey]: true,
-      },
-    };
-
-    setMonthlyActivity(updatedActivity);
-    localStorage.setItem("monthlyActivity", JSON.stringify(updatedActivity));
-
-    const logKey = `${monthKey}-${dayKey}`;
-    const updatedLogs = {
-      ...dailyLogCounts,
-      [logKey]: (dailyLogCounts[logKey] || 0) + 1,
-    };
-    setDailyLogCounts(updatedLogs);
-    localStorage.setItem("dailyLogCounts", JSON.stringify(updatedLogs));
-
-    const newProgress: ProgressData = {
-      date: new Date().toLocaleDateString("en-US", {
+      // Progress & Volume
+      const chartDate = d.toLocaleDateString("en-US", {
         month: "short",
         day: "numeric",
-      }),
-      pushups: pushupSets.reduce((s, x) => s + x.reps, 0),
-      weightlifts: weightliftSets.reduce((s, x) => s + x.reps, 0),
-      cardio: cardioSets.reduce((s, x) => s + x.reps, 0),
-      custom: customExercises.reduce(
-        (s, ex) => s + ex.sets.reduce((a, b) => a + b.reps, 0),
-        0,
-      ),
-    };
+      });
+
+      if (newProgressDict[chartDate]) {
+        newProgressDict[chartDate].pushups += r.pushups;
+        newProgressDict[chartDate].weightlifts += r.weightlifts;
+        newProgressDict[chartDate].cardio += r.cardio;
+        newProgressDict[chartDate].custom += r.custom;
+      } else {
+        newProgressDict[chartDate] = {
+          date: chartDate,
+          pushups: r.pushups,
+          weightlifts: r.weightlifts,
+          cardio: r.cardio,
+          custom: r.custom,
+        };
+      }
+
+      if (newVolumeDict[chartDate]) {
+        newVolumeDict[chartDate].volume += r.volume;
+      } else {
+        newVolumeDict[chartDate] = {
+          date: chartDate,
+          volume: r.volume,
+        };
+      }
+    }
+
+    // Reset streak if we missed yesterday
+    if (lastDateObj) {
+      const diffTime = Math.abs(today.getTime() - lastDateObj.getTime());
+      const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+      if (diffDays > 1) {
+        newStreak = 0;
+      }
+    }
+
+    setStreak(newStreak);
+    setLastActiveDate(newLastActive);
+    setMonthlyActivity(newMonthlyActivity);
+    setDailyLogCounts(newDailyLogCounts);
+
+    setProgressData(Object.values(newProgressDict).slice(-14));
+    setVolumeData(Object.values(newVolumeDict).slice(-7));
+  }, [routines]);
+
+
+
+  // Save routine
+  const handleSubmitRoutine = async () => {
+    if (!userId) {
+      toast.error("Please login to save your routine.");
+      return;
+    }
+
+    const today = new Date().toDateString();
+
+    const pushups = pushupSets.reduce((s, x) => s + x.reps, 0);
+    const weightlifts = weightliftSets.reduce((s, x) => s + x.reps, 0);
+    const cardio = cardioSets.reduce((s, x) => s + x.reps, 0);
+    const custom = customExercises.reduce(
+      (s, ex) => s + ex.sets.reduce((a, b) => a + b.reps, 0),
+      0,
+    );
 
     const volume =
       weightliftSets.reduce(
@@ -217,56 +213,28 @@ const RoutinesPage = () => {
         );
       }, 0);
 
-    // ✅ cumulative update if same day exists, else push new day
-    const existingIndex = progressData.findIndex(
-      (p) => p.date === newProgress.date,
-    );
+    try {
+      await saveRoutine({
+        userId,
+        date: today,
+        pushups,
+        weightlifts,
+        cardio,
+        custom,
+        volume,
+      });
 
-    let updatedProgress: ProgressData[] = [];
-    let updatedVolume: VolumeData[] = [];
+      // reset all inputs after submit
+      setPushupSets([{ reps: 0, type: "bodyweight" }]);
+      setWeightliftSets([{ reps: 0, weight: "", type: "weighted" }]);
+      setCardioSets([{ reps: 0, type: "duration" }]);
+      setCustomExercises([]);
 
-    if (existingIndex !== -1) {
-      updatedProgress = [...progressData];
-      updatedProgress[existingIndex] = {
-        ...updatedProgress[existingIndex],
-        pushups: updatedProgress[existingIndex].pushups + newProgress.pushups,
-        weightlifts:
-          updatedProgress[existingIndex].weightlifts + newProgress.weightlifts,
-        cardio: updatedProgress[existingIndex].cardio + newProgress.cardio,
-        custom: updatedProgress[existingIndex].custom + newProgress.custom,
-      };
-
-      updatedVolume = [...volumeData];
-      if (updatedVolume[existingIndex]) {
-        updatedVolume[existingIndex] = {
-          ...updatedVolume[existingIndex],
-          volume: updatedVolume[existingIndex].volume + volume,
-        };
-      } else {
-        // fallback (just in case arrays mismatch)
-        updatedVolume.push({ date: newProgress.date, volume });
-      }
-    } else {
-      updatedProgress = [...progressData, newProgress].slice(-14);
-      updatedVolume = [...volumeData, { date: newProgress.date, volume }].slice(
-        -7,
-      );
+      toast.success("Routine logged successfully!");
+    } catch (e) {
+      toast.error("Error saving routine.");
+      console.error(e);
     }
-
-    setProgressData(updatedProgress);
-    localStorage.setItem("workoutProgress", JSON.stringify(updatedProgress));
-
-    setVolumeData(updatedVolume);
-    localStorage.setItem("volumeProgress", JSON.stringify(updatedVolume));
-
-    // ✅ reset all inputs after submit
-    setPushupSets([{ reps: 0, type: "bodyweight" }]);
-    setWeightliftSets([{ reps: 0, weight: "", type: "weighted" }]);
-    setCardioSets([{ reps: 0, type: "duration" }]);
-    setCustomExercises([]);
-
-    // ✅ toast instead of alert
-    toast.success("Routine logged successfully!");
   };
 
   const hasAnyActivity = () => {
@@ -287,27 +255,27 @@ const RoutinesPage = () => {
 
   const pieData = progressData.length
     ? [
-        {
-          name: "Push-ups",
-          value: progressData.at(-1)!.pushups,
-          color: "#8b5cf6",
-        },
-        {
-          name: "Weight Lifts",
-          value: progressData.at(-1)!.weightlifts,
-          color: "#3b82f6",
-        },
-        {
-          name: "Cardio",
-          value: progressData.at(-1)!.cardio,
-          color: "#ef4444",
-        },
-        {
-          name: "Custom",
-          value: progressData.at(-1)!.custom,
-          color: "#10b981",
-        },
-      ].filter((x) => x.value > 0)
+      {
+        name: "Push-ups",
+        value: progressData.at(-1)!.pushups,
+        color: "#8b5cf6",
+      },
+      {
+        name: "Weight Lifts",
+        value: progressData.at(-1)!.weightlifts,
+        color: "#3b82f6",
+      },
+      {
+        name: "Cardio",
+        value: progressData.at(-1)!.cardio,
+        color: "#ef4444",
+      },
+      {
+        name: "Custom",
+        value: progressData.at(-1)!.custom,
+        color: "#10b981",
+      },
+    ].filter((x) => x.value > 0)
     : [];
 
   const handleAddCustomExercise = ({
@@ -330,6 +298,17 @@ const RoutinesPage = () => {
       },
     ]);
   };
+
+  if (!isUserLoaded || routines === undefined) {
+    return (
+      <section className="pt-12 pb-32 container mx-auto px-4 flex justify-center items-center min-h-[50vh]">
+        <div className="flex flex-col items-center gap-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+          <p className="text-muted-foreground font-mono text-sm animate-pulse">Loading routines...</p>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="pt-12 pb-32 container mx-auto px-4">
@@ -394,14 +373,14 @@ const RoutinesPage = () => {
                 customExercises.map((ex) =>
                   ex.id === id
                     ? {
-                        ...ex,
-                        sets: [
-                          ...ex.sets,
-                          ex.type === "weighted"
-                            ? { reps: 0, weight: "", type: "weighted" }
-                            : { reps: 0, type: ex.type },
-                        ],
-                      }
+                      ...ex,
+                      sets: [
+                        ...ex.sets,
+                        ex.type === "weighted"
+                          ? { reps: 0, weight: "", type: "weighted" }
+                          : { reps: 0, type: ex.type },
+                      ],
+                    }
                     : ex,
                 ),
               )
@@ -420,16 +399,16 @@ const RoutinesPage = () => {
                 customExercises.map((ex) =>
                   ex.id === id
                     ? {
-                        ...ex,
-                        sets: ex.sets.map((s, x) =>
-                          x === i
-                            ? {
-                                ...s,
-                                [f]: f === "reps" ? parseInt(v) || 0 : v,
-                              }
-                            : s,
-                        ),
-                      }
+                      ...ex,
+                      sets: ex.sets.map((s, x) =>
+                        x === i
+                          ? {
+                            ...s,
+                            [f]: f === "reps" ? parseInt(v) || 0 : v,
+                          }
+                          : s,
+                      ),
+                    }
                     : ex,
                 ),
               )
@@ -449,8 +428,8 @@ const RoutinesPage = () => {
           <StreakCard
             streak={streak}
             lastActiveDate={lastActiveDate}
-            currentDate={currentDate}
-            renderCalendar={renderCalendar}
+            monthlyActivity={monthlyActivity as Record<string, Record<number, boolean>>}
+            dailyLogCounts={dailyLogCounts as Record<string, number>}
           />
 
           <AnalyticsPanel

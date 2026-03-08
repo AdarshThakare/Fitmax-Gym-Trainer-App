@@ -1,11 +1,4 @@
-import {
-  PieChart,
-  Pie,
-  Cell,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-} from "recharts";
+import ReactECharts from "echarts-for-react";
 
 interface Props {
   data: { name: string; value: number; color: string }[];
@@ -20,28 +13,64 @@ const DistributionChart = ({ data }: Props) => {
     );
   }
 
-  return (
-    <ResponsiveContainer width="100%" height={300}>
-      <PieChart>
-        <Pie
-          data={data}
-          cx="50%"
-          cy="50%"
-          labelLine={false}
-          label={({ name, percent }: any) =>
-            `${name}: ${(percent * 100).toFixed(0)}%`
+  // Format data for ECharts Pie
+  const chartData = data.map(item => ({
+    name: item.name,
+    value: item.value,
+    itemStyle: { color: item.color }
+  }));
+
+  const options = {
+    tooltip: {
+      trigger: 'item',
+      backgroundColor: '#1a1a1a',
+      borderColor: '#333',
+      textStyle: { color: '#fff' },
+    },
+    legend: {
+      orient: 'vertical',
+      left: 'left',
+      textStyle: { color: '#888' },
+    },
+    series: [
+      {
+        name: 'Distribution',
+        type: 'pie',
+        radius: ['40%', '70%'],
+        avoidLabelOverlap: false,
+        itemStyle: {
+          borderRadius: 10,
+          borderColor: '#111', // Background match to provide gap effect
+          borderWidth: 2
+        },
+        label: {
+          show: false,
+          position: 'center'
+        },
+        emphasis: {
+          label: {
+            show: true,
+            fontSize: 20,
+            fontWeight: 'bold',
+            color: '#fff'
           }
-          outerRadius={100}
-          dataKey="value"
-        >
-          {data.map((entry, index) => (
-            <Cell key={index} fill={entry.color} />
-          ))}
-        </Pie>
-        <Tooltip />
-        <Legend />
-      </PieChart>
-    </ResponsiveContainer>
+        },
+        labelLine: {
+          show: false
+        },
+        data: chartData
+      }
+    ]
+  };
+
+  return (
+    <div className="w-full h-[350px]">
+      <ReactECharts
+        option={options}
+        style={{ height: '100%', width: '100%' }}
+        opts={{ renderer: 'svg' }}
+      />
+    </div>
   );
 };
 

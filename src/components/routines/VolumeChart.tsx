@@ -1,13 +1,4 @@
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-} from "recharts";
+import ReactECharts from "echarts-for-react";
 
 interface Props {
   data: any[];
@@ -22,17 +13,74 @@ const VolumeChart = ({ data }: Props) => {
     );
   }
 
+  const xAxisData = data.map((item) => item.date);
+  const volumeValues = data.map((item) => item.volume);
+
+  const options = {
+    tooltip: {
+      trigger: 'axis',
+      axisPointer: { type: 'shadow' },
+      backgroundColor: '#1a1a1a',
+      borderColor: '#333',
+      textStyle: { color: '#fff' },
+    },
+    grid: {
+      left: '3%',
+      right: '4%',
+      bottom: '15%',
+      containLabel: true,
+    },
+    xAxis: {
+      type: 'category',
+      data: xAxisData,
+      axisLine: { lineStyle: { color: '#888' } },
+    },
+    yAxis: {
+      type: 'value',
+      splitLine: { lineStyle: { color: '#333', type: 'dashed' } },
+      axisLine: { lineStyle: { color: '#888' } },
+    },
+    dataZoom: [
+      {
+        type: 'slider',
+        show: true,
+        xAxisIndex: [0],
+        start: 0,
+        end: 100,
+        bottom: 0,
+        textStyle: { color: '#888' },
+        borderColor: '#333',
+        fillerColor: 'rgba(59, 130, 246, 0.2)',
+      },
+      {
+        type: 'inside',
+        xAxisIndex: [0],
+        start: 0,
+        end: 100
+      }
+    ],
+    series: [
+      {
+        name: 'Volume',
+        type: 'bar',
+        barWidth: '60%',
+        data: volumeValues,
+        itemStyle: {
+          color: '#3b82f6',
+          borderRadius: [4, 4, 0, 0]
+        }
+      }
+    ]
+  };
+
   return (
-    <ResponsiveContainer width="100%" height={300}>
-      <BarChart data={data}>
-        <CartesianGrid strokeDasharray="3 3" stroke="#333" />
-        <XAxis dataKey="date" stroke="#888" />
-        <YAxis stroke="#888" />
-        <Tooltip />
-        <Legend />
-        <Bar dataKey="volume" fill="#8b5cf6" radius={[8, 8, 0, 0]} />
-      </BarChart>
-    </ResponsiveContainer>
+    <div className="w-full h-[350px]">
+      <ReactECharts
+        option={options}
+        style={{ height: '100%', width: '100%' }}
+        opts={{ renderer: 'svg' }}
+      />
+    </div>
   );
 };
 
