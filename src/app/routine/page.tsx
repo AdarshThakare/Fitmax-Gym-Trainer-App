@@ -8,13 +8,18 @@ import { api } from "../../../convex/_generated/api";
 // UI
 import { Button } from "@/components/ui/button";
 
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
 // Sections
 import PushupSection from "@/components/routines/PushupSection";
 import WeightLiftSection from "@/components/routines/WeightLiftSection";
-import StreakCard from "@/components/routines/StreakCard";
-import AnalyticsPanel from "@/components/routines/AnalyticsPanel";
 import CustomExercisesSection from "@/components/routines/CustomExercisesSection";
 import CardioSection from "@/components/routines/CardioSection";
+import CrunchesSection from "@/components/routines/CrunchesSection";
+import SquatsSection from "@/components/routines/SquatsSection";
+import ExerciseCarouselChart from "@/components/routines/charts/ExerciseCarouselChart";
+import TimeframeAnalysisChart from "@/components/routines/charts/TimeframeAnalysisChart";
+import ComparativeAnalysisChart from "@/components/routines/charts/ComparativeAnalysisChart";
 import { toast } from "sonner";
 
 // Types
@@ -24,34 +29,17 @@ interface ExerciseSet {
   weight?: string;
 }
 
+interface CardioSet {
+  cardioType: "running" | "cycling";
+  reps: number;
+  distance?: string;
+}
+
 interface CustomExercise {
   id: string;
   name: string;
   type: "weighted" | "bodyweight" | "duration";
   sets: ExerciseSet[];
-}
-
-interface ProgressData {
-  date: string;
-  pushups: number;
-  weightlifts: number;
-  cardio: number;
-  custom: number;
-}
-
-interface VolumeData {
-  date: string;
-  volume: number;
-}
-
-interface MonthlyActivity {
-  [key: string]: {
-    [key: number]: boolean;
-  };
-}
-
-interface DailyLogCounts {
-  [key: string]: number;
 }
 
 const RoutinesPage = () => {
@@ -62,12 +50,6 @@ const RoutinesPage = () => {
   const routines = useQuery(api.routines.getUserRoutines, userId ? { userId } : "skip");
   const saveRoutine = useMutation(api.routines.saveRoutine);
 
-  const [streak, setStreak] = useState(0);
-  const [lastActiveDate, setLastActiveDate] = useState("");
-
-  const [monthlyActivity, setMonthlyActivity] = useState<MonthlyActivity>({});
-  const [dailyLogCounts, setDailyLogCounts] = useState<DailyLogCounts>({});
-
   // Exercise states
   const [pushupSets, setPushupSets] = useState<ExerciseSet[]>([
     { reps: 0, type: "bodyweight" },
@@ -75,110 +57,16 @@ const RoutinesPage = () => {
   const [weightliftSets, setWeightliftSets] = useState<ExerciseSet[]>([
     { reps: 0, weight: "", type: "weighted" },
   ]);
-  const [cardioSets, setCardioSets] = useState<ExerciseSet[]>([
-    { reps: 0, type: "duration" },
+  const [cardioSets, setCardioSets] = useState<CardioSet[]>([
+    { reps: 0, cardioType: "running", distance: "" },
+  ]);
+  const [crunchesSets, setCrunchesSets] = useState<ExerciseSet[]>([
+    { reps: 0, type: "bodyweight" },
+  ]);
+  const [squatsSets, setSquatsSets] = useState<ExerciseSet[]>([
+    { reps: 0, type: "bodyweight" },
   ]);
   const [customExercises, setCustomExercises] = useState<CustomExercise[]>([]);
-
-  // Progress
-  const [progressData, setProgressData] = useState<ProgressData[]>([]);
-  const [volumeData, setVolumeData] = useState<VolumeData[]>([]);
-
-  // Load data from Convex
-  useEffect(() => {
-    if (routines === undefined) return;
-
-    const reverseRoutines = [...routines].reverse(); // Sort oldest to newest
-
-    let newStreak = 0;
-    let newLastActive = "";
-    const newMonthlyActivity: MonthlyActivity = {};
-    const newDailyLogCounts: DailyLogCounts = {};
-    const newProgressDict: Record<string, ProgressData> = {};
-    const newVolumeDict: Record<string, VolumeData> = {};
-
-    let lastDateObj: Date | null = null;
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    for (const r of reverseRoutines) {
-      const d = new Date(r.date);
-      d.setHours(0, 0, 0, 0);
-
-      const mKey = `${d.getFullYear()}-${d.getMonth()}`;
-      const day = d.getDate();
-
-      if (!newMonthlyActivity[mKey]) newMonthlyActivity[mKey] = {};
-      newMonthlyActivity[mKey][day] = true;
-
-      const logKey = `${mKey}-${day}`;
-      newDailyLogCounts[logKey] = r.logCount || 1;
-
-      // For streak calculation
-      if (lastDateObj) {
-        const diffTime = Math.abs(d.getTime() - lastDateObj.getTime());
-        const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
-        if (diffDays === 1) {
-          newStreak++;
-        } else if (diffDays > 1) {
-          newStreak = 1;
-        }
-      } else {
-        newStreak = 1;
-      }
-      lastDateObj = d;
-      newLastActive = r.date;
-
-      // Progress & Volume
-      const chartDate = d.toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-      });
-
-      if (newProgressDict[chartDate]) {
-        newProgressDict[chartDate].pushups += r.pushups;
-        newProgressDict[chartDate].weightlifts += r.weightlifts;
-        newProgressDict[chartDate].cardio += r.cardio;
-        newProgressDict[chartDate].custom += r.custom;
-      } else {
-        newProgressDict[chartDate] = {
-          date: chartDate,
-          pushups: r.pushups,
-          weightlifts: r.weightlifts,
-          cardio: r.cardio,
-          custom: r.custom,
-        };
-      }
-
-      if (newVolumeDict[chartDate]) {
-        newVolumeDict[chartDate].volume += r.volume;
-      } else {
-        newVolumeDict[chartDate] = {
-          date: chartDate,
-          volume: r.volume,
-        };
-      }
-    }
-
-    // Reset streak if we missed yesterday
-    if (lastDateObj) {
-      const diffTime = Math.abs(today.getTime() - lastDateObj.getTime());
-      const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
-      if (diffDays > 1) {
-        newStreak = 0;
-      }
-    }
-
-    setStreak(newStreak);
-    setLastActiveDate(newLastActive);
-    setMonthlyActivity(newMonthlyActivity);
-    setDailyLogCounts(newDailyLogCounts);
-
-    setProgressData(Object.values(newProgressDict).slice(-14));
-    setVolumeData(Object.values(newVolumeDict).slice(-7));
-  }, [routines]);
-
-
 
   // Save routine
   const handleSubmitRoutine = async () => {
@@ -192,26 +80,19 @@ const RoutinesPage = () => {
     const pushups = pushupSets.reduce((s, x) => s + x.reps, 0);
     const weightlifts = weightliftSets.reduce((s, x) => s + x.reps, 0);
     const cardio = cardioSets.reduce((s, x) => s + x.reps, 0);
+
+    // Extracted specific metrics
+    const runningTime = cardioSets.filter(x => x.cardioType === "running").reduce((s, x) => s + x.reps, 0);
+    const runningDistance = cardioSets.filter(x => x.cardioType === "running").reduce((s, x) => s + (parseFloat(x.distance || "0") || 0), 0);
+    const cyclingTime = cardioSets.filter(x => x.cardioType === "cycling").reduce((s, x) => s + x.reps, 0);
+    const cyclingDistance = cardioSets.filter(x => x.cardioType === "cycling").reduce((s, x) => s + (parseFloat(x.distance || "0") || 0), 0);
+
+    const crunches = crunchesSets.reduce((s, x) => s + x.reps, 0);
+    const squats = squatsSets.reduce((s, x) => s + x.reps, 0);
     const custom = customExercises.reduce(
       (s, ex) => s + ex.sets.reduce((a, b) => a + b.reps, 0),
       0,
     );
-
-    const volume =
-      weightliftSets.reduce(
-        (s, x) => s + (parseFloat(x.weight || "0") || 0) * x.reps,
-        0,
-      ) +
-      customExercises.reduce((s, ex) => {
-        if (ex.type !== "weighted") return s;
-        return (
-          s +
-          ex.sets.reduce(
-            (a, b) => a + (parseFloat(b.weight || "0") || 0) * b.reps,
-            0,
-          )
-        );
-      }, 0);
 
     try {
       await saveRoutine({
@@ -220,14 +101,30 @@ const RoutinesPage = () => {
         pushups,
         weightlifts,
         cardio,
+        runningTime,
+        runningDistance,
+        cyclingTime,
+        cyclingDistance,
+        crunches,
+        squats,
         custom,
-        volume,
+        pushupSetsDetail: pushupSets.filter(s => s.reps > 0),
+        weightliftSetsDetail: weightliftSets.filter(s => s.reps > 0),
+        cardioSetsDetail: cardioSets.filter(s => s.reps > 0 || parseFloat(s.distance || "0") > 0),
+        crunchesSetsDetail: crunchesSets.filter(s => s.reps > 0),
+        squatsSetsDetail: squatsSets.filter(s => s.reps > 0),
+        customSetsDetail: customExercises.map(ex => ({
+          ...ex,
+          sets: ex.sets.filter(s => s.reps > 0)
+        })).filter(ex => ex.sets.length > 0),
       });
 
       // reset all inputs after submit
       setPushupSets([{ reps: 0, type: "bodyweight" }]);
       setWeightliftSets([{ reps: 0, weight: "", type: "weighted" }]);
-      setCardioSets([{ reps: 0, type: "duration" }]);
+      setCardioSets([{ reps: 0, cardioType: "running", distance: "" }]);
+      setCrunchesSets([{ reps: 0, type: "bodyweight" }]);
+      setSquatsSets([{ reps: 0, type: "bodyweight" }]);
       setCustomExercises([]);
 
       toast.success("Routine logged successfully!");
@@ -244,39 +141,17 @@ const RoutinesPage = () => {
       (s) => s.reps > 0 && parseFloat(s.weight || "0") > 0,
     );
 
-    const hasCardio = cardioSets.some((s) => s.reps > 0);
+    const hasCardio = cardioSets.some((s) => s.reps > 0 || parseFloat(s.distance || "0") > 0);
+
+    const hasCrunches = crunchesSets.some((s) => s.reps > 0);
+    const hasSquats = squatsSets.some((s) => s.reps > 0);
 
     const hasCustom = customExercises.some((ex) =>
       ex.sets.some((s) => s.reps > 0),
     );
 
-    return hasPushups || hasWeightlifts || hasCardio || hasCustom;
+    return hasPushups || hasWeightlifts || hasCardio || hasCrunches || hasSquats || hasCustom;
   };
-
-  const pieData = progressData.length
-    ? [
-      {
-        name: "Push-ups",
-        value: progressData.at(-1)!.pushups,
-        color: "#8b5cf6",
-      },
-      {
-        name: "Weight Lifts",
-        value: progressData.at(-1)!.weightlifts,
-        color: "#3b82f6",
-      },
-      {
-        name: "Cardio",
-        value: progressData.at(-1)!.cardio,
-        color: "#ef4444",
-      },
-      {
-        name: "Custom",
-        value: progressData.at(-1)!.custom,
-        color: "#10b981",
-      },
-    ].filter((x) => x.value > 0)
-    : [];
 
   const handleAddCustomExercise = ({
     name,
@@ -312,108 +187,147 @@ const RoutinesPage = () => {
 
   return (
     <section className="pt-12 pb-32 container mx-auto px-4">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="space-y-6">
-          <PushupSection
-            sets={pushupSets}
-            onAdd={() =>
-              setPushupSets([...pushupSets, { reps: 0, type: "bodyweight" }])
-            }
-            onRemove={(i) =>
-              setPushupSets(pushupSets.filter((_, x) => x !== i))
-            }
-            onUpdate={(i, v) => {
-              const c = [...pushupSets];
-              c[i].reps = parseInt(v) || 0;
-              setPushupSets(c);
-            }}
-          />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8 w-full max-w-7xl mx-auto items-start">
+        <div className="flex flex-col gap-6 w-full">
+          <Tabs defaultValue="simple" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="simple">Simple</TabsTrigger>
+              <TabsTrigger value="custom">Custom</TabsTrigger>
+            </TabsList>
+            <TabsContent value="simple" className="space-y-6 mt-6">
+              <PushupSection
+                sets={pushupSets}
+                onAdd={() =>
+                  setPushupSets([...pushupSets, { reps: 0, type: "bodyweight" }])
+                }
+                onRemove={(i) =>
+                  setPushupSets(pushupSets.filter((_, x) => x !== i))
+                }
+                onUpdate={(i, v) => {
+                  const c = [...pushupSets];
+                  c[i].reps = parseInt(v) || 0;
+                  setPushupSets(c);
+                }}
+              />
 
-          <WeightLiftSection
-            sets={weightliftSets}
-            onAdd={() =>
-              setWeightliftSets([
-                ...weightliftSets,
-                { reps: 0, weight: "", type: "weighted" },
-              ])
-            }
-            onRemove={(i) =>
-              setWeightliftSets(weightliftSets.filter((_, x) => x !== i))
-            }
-            onUpdate={(i, f, v) => {
-              const c = [...weightliftSets];
-              (c[i] as any)[f] = f === "reps" ? parseInt(v) || 0 : v;
-              setWeightliftSets(c);
-            }}
-          />
+              <WeightLiftSection
+                sets={weightliftSets}
+                onAdd={() =>
+                  setWeightliftSets([
+                    ...weightliftSets,
+                    { reps: 0, weight: "", type: "weighted" },
+                  ])
+                }
+                onRemove={(i) =>
+                  setWeightliftSets(weightliftSets.filter((_, x) => x !== i))
+                }
+                onUpdate={(i, f, v) => {
+                  const c = [...weightliftSets];
+                  (c[i] as any)[f] = f === "reps" ? parseInt(v) || 0 : v;
+                  setWeightliftSets(c);
+                }}
+              />
 
-          <CardioSection
-            sets={cardioSets}
-            onAdd={() =>
-              setCardioSets([...cardioSets, { reps: 0, type: "duration" }])
-            }
-            onRemove={(i) =>
-              setCardioSets(cardioSets.filter((_, x) => x !== i))
-            }
-            onUpdate={(i, v) => {
-              const c = [...cardioSets];
-              c[i].reps = parseInt(v) || 0;
-              setCardioSets(c);
-            }}
-          />
+              <CardioSection
+                sets={cardioSets}
+                onAdd={() =>
+                  setCardioSets([...cardioSets, { reps: 0, cardioType: "running", distance: "" }])
+                }
+                onRemove={(i) =>
+                  setCardioSets(cardioSets.filter((_, x) => x !== i))
+                }
+                onUpdate={(i, f, v) => {
+                  const c = [...cardioSets];
+                  (c[i] as any)[f] = f === "reps" ? parseInt(v) || 0 : v;
+                  setCardioSets(c);
+                }}
+              />
 
-          <CustomExercisesSection
-            exercises={customExercises}
-            onAddExercise={handleAddCustomExercise}
-            onRemoveExercise={(id) =>
-              setCustomExercises(customExercises.filter((x) => x.id !== id))
-            }
-            onAddSet={(id) =>
-              setCustomExercises(
-                customExercises.map((ex) =>
-                  ex.id === id
-                    ? {
-                      ...ex,
-                      sets: [
-                        ...ex.sets,
-                        ex.type === "weighted"
-                          ? { reps: 0, weight: "", type: "weighted" }
-                          : { reps: 0, type: ex.type },
-                      ],
-                    }
-                    : ex,
-                ),
-              )
-            }
-            onRemoveSet={(id, i) =>
-              setCustomExercises(
-                customExercises.map((ex) =>
-                  ex.id === id
-                    ? { ...ex, sets: ex.sets.filter((_, x) => x !== i) }
-                    : ex,
-                ),
-              )
-            }
-            onUpdateSet={(id, i, f, v) =>
-              setCustomExercises(
-                customExercises.map((ex) =>
-                  ex.id === id
-                    ? {
-                      ...ex,
-                      sets: ex.sets.map((s, x) =>
-                        x === i
-                          ? {
-                            ...s,
-                            [f]: f === "reps" ? parseInt(v) || 0 : v,
-                          }
-                          : s,
-                      ),
-                    }
-                    : ex,
-                ),
-              )
-            }
-          />
+              <CrunchesSection
+                sets={crunchesSets}
+                onAdd={() =>
+                  setCrunchesSets([...crunchesSets, { reps: 0, type: "bodyweight" }])
+                }
+                onRemove={(i) =>
+                  setCrunchesSets(crunchesSets.filter((_, x) => x !== i))
+                }
+                onUpdate={(i, v) => {
+                  const c = [...crunchesSets];
+                  c[i].reps = parseInt(v) || 0;
+                  setCrunchesSets(c);
+                }}
+              />
+
+              <SquatsSection
+                sets={squatsSets}
+                onAdd={() =>
+                  setSquatsSets([...squatsSets, { reps: 0, type: "bodyweight" }])
+                }
+                onRemove={(i) =>
+                  setSquatsSets(squatsSets.filter((_, x) => x !== i))
+                }
+                onUpdate={(i, v) => {
+                  const c = [...squatsSets];
+                  c[i].reps = parseInt(v) || 0;
+                  setSquatsSets(c);
+                }}
+              />
+            </TabsContent>
+            <TabsContent value="custom" className="space-y-6 mt-6">
+              <CustomExercisesSection
+                exercises={customExercises}
+                onAddExercise={handleAddCustomExercise}
+                onRemoveExercise={(id) =>
+                  setCustomExercises(customExercises.filter((x) => x.id !== id))
+                }
+                onAddSet={(id) =>
+                  setCustomExercises(
+                    customExercises.map((ex) =>
+                      ex.id === id
+                        ? {
+                          ...ex,
+                          sets: [
+                            ...ex.sets,
+                            ex.type === "weighted"
+                              ? { reps: 0, weight: "", type: "weighted" }
+                              : { reps: 0, type: ex.type },
+                          ],
+                        }
+                        : ex,
+                    ),
+                  )
+                }
+                onRemoveSet={(id, i) =>
+                  setCustomExercises(
+                    customExercises.map((ex) =>
+                      ex.id === id
+                        ? { ...ex, sets: ex.sets.filter((_, x) => x !== i) }
+                        : ex,
+                    ),
+                  )
+                }
+                onUpdateSet={(id, i, f, v) =>
+                  setCustomExercises(
+                    customExercises.map((ex) =>
+                      ex.id === id
+                        ? {
+                          ...ex,
+                          sets: ex.sets.map((s, x) =>
+                            x === i
+                              ? {
+                                ...s,
+                                [f]: f === "reps" ? parseInt(v) || 0 : v,
+                              }
+                              : s,
+                          ),
+                        }
+                        : ex,
+                    ),
+                  )
+                }
+              />
+            </TabsContent>
+          </Tabs>
 
           <Button
             disabled={!hasAnyActivity()}
@@ -424,19 +338,23 @@ const RoutinesPage = () => {
           </Button>
         </div>
 
-        <div className="lg:col-span-2 space-y-6">
-          <StreakCard
-            streak={streak}
-            lastActiveDate={lastActiveDate}
-            monthlyActivity={monthlyActivity as Record<string, Record<number, boolean>>}
-            dailyLogCounts={dailyLogCounts as Record<string, number>}
+        <div className="flex flex-col gap-6 w-full md:sticky md:top-24 md:mt-0 lg:-mt-2">
+          <h2 className="text-2xl font-bold tracking-tight mb-2">Analytics</h2>
+          <ExerciseCarouselChart
+            routines={routines || []}
+            pushupSets={pushupSets}
+            weightliftSets={weightliftSets}
+            cardioSets={cardioSets}
+            crunchesSets={crunchesSets}
+            squatsSets={squatsSets}
+            customExercises={customExercises}
           />
-
-          <AnalyticsPanel
-            progressData={progressData}
-            volumeData={volumeData}
-            pieData={pieData}
-          />
+          {routines && routines.length > 0 && (
+            <>
+              <TimeframeAnalysisChart routines={routines} />
+              <ComparativeAnalysisChart routines={routines} />
+            </>
+          )}
         </div>
       </div>
     </section>
@@ -444,3 +362,4 @@ const RoutinesPage = () => {
 };
 
 export default RoutinesPage;
+

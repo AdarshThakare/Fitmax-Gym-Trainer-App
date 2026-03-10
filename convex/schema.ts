@@ -51,8 +51,32 @@ export default defineSchema({
     pushups: v.number(),
     weightlifts: v.number(),
     cardio: v.number(),
+    runningTime: v.optional(v.number()),
+    runningDistance: v.optional(v.number()),
+    cyclingTime: v.optional(v.number()),
+    cyclingDistance: v.optional(v.number()),
     custom: v.number(),
-    volume: v.number(),
+    volume: v.optional(v.number()),
+    crunches: v.optional(v.number()),
+    squats: v.optional(v.number()),
+
+    // Detailed Set-wise Tracking
+    pushupSetsDetail: v.optional(v.array(v.object({ reps: v.number(), type: v.string() }))),
+    weightliftSetsDetail: v.optional(v.array(v.object({ reps: v.number(), weight: v.optional(v.string()), type: v.string() }))),
+    cardioSetsDetail: v.optional(v.array(v.object({ cardioType: v.string(), reps: v.number(), distance: v.optional(v.string()) }))),
+    crunchesSetsDetail: v.optional(v.array(v.object({ reps: v.number(), type: v.string() }))),
+    squatsSetsDetail: v.optional(v.array(v.object({ reps: v.number(), type: v.string() }))),
+    customSetsDetail: v.optional(
+      v.array(
+        v.object({
+          id: v.string(),
+          name: v.string(),
+          type: v.string(),
+          sets: v.array(v.object({ reps: v.number(), weight: v.optional(v.string()), type: v.string() }))
+        })
+      )
+    ),
+
     logCount: v.optional(v.number()),
     createdAt: v.number(),
   })

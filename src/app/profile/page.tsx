@@ -10,6 +10,17 @@ import CornerElements from "@/components/CornerElements";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AppleIcon, CalendarIcon, DumbbellIcon } from "lucide-react";
+import StreakCard from "@/components/routines/StreakCard";
+
+interface MonthlyActivity {
+  [key: string]: {
+    [key: number]: boolean;
+  };
+}
+
+interface DailyLogCounts {
+  [key: string]: number;
+}
 
 import {
   Accordion,
@@ -29,6 +40,74 @@ const ProfilePage = () => {
   useEffect(() => {
     allPlans ? setIsLoading(false) : setIsLoading(true);
   }, [allPlans]);
+
+  const routines = useQuery(api.routines.getUserRoutines, userId ? { userId } : "skip");
+
+  const [streak, setStreak] = useState(0);
+  const [lastActiveDate, setLastActiveDate] = useState("");
+
+  const [monthlyActivity, setMonthlyActivity] = useState<MonthlyActivity>({});
+  const [dailyLogCounts, setDailyLogCounts] = useState<DailyLogCounts>({});
+
+  // Load data from Convex
+  useEffect(() => {
+    if (routines === undefined) return;
+
+    const reverseRoutines = [...routines].reverse(); // Sort oldest to newest
+
+    let newStreak = 0;
+    let newLastActive = "";
+    const newMonthlyActivity: MonthlyActivity = {};
+    const newDailyLogCounts: DailyLogCounts = {};
+
+    let lastDateObj: Date | null = null;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    for (const r of reverseRoutines) {
+      const d = new Date(r.date);
+      d.setHours(0, 0, 0, 0);
+
+      const mKey = `${d.getFullYear()}-${d.getMonth()}`;
+      const day = d.getDate();
+
+      if (!newMonthlyActivity[mKey]) newMonthlyActivity[mKey] = {};
+      newMonthlyActivity[mKey][day] = true;
+
+      const logKey = `${mKey}-${day}`;
+      newDailyLogCounts[logKey] = r.logCount || 1;
+
+      // For streak calculation
+      if (lastDateObj) {
+        const diffTime = Math.abs(d.getTime() - lastDateObj.getTime());
+        const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+        if (diffDays === 1) {
+          newStreak++;
+        } else if (diffDays > 1) {
+          newStreak = 1;
+        }
+      } else {
+        newStreak = 1;
+      }
+      // Streak calculation continued...
+      lastDateObj = d;
+      newLastActive = r.date;
+    }
+
+    // Reset streak if we missed yesterday
+    if (lastDateObj) {
+      const diffTime = Math.abs(today.getTime() - lastDateObj.getTime());
+      const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+      if (diffDays > 1) {
+        newStreak = 0;
+      }
+    }
+
+    setStreak(newStreak);
+    setLastActiveDate(newLastActive);
+    setMonthlyActivity(newMonthlyActivity);
+    setDailyLogCounts(newDailyLogCounts);
+  }, [routines]);
 
   const activePlan = allPlans?.find((plan) => plan.isActive);
 
@@ -56,8 +135,15 @@ const ProfilePage = () => {
         <div>
           {allPlans && allPlans?.length > 0 ? (
             <div className="space-y-8">
+              <StreakCard
+                streak={streak}
+                lastActiveDate={lastActiveDate}
+                monthlyActivity={monthlyActivity as Record<string, Record<number, boolean>>}
+                dailyLogCounts={dailyLogCounts as Record<string, number>}
+              />
+
               {/* PLAN SELECTOR */}
-              <div className="relative backdrop-blur-sm border border-border p-6">
+              <div className="relative backdrop-blur-sm border border-border p-6 rounded-lg">
                 <CornerElements />
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-xl font-bold tracking-tight">
@@ -74,11 +160,10 @@ const ProfilePage = () => {
                     <Button
                       key={plan._id}
                       onClick={() => setSelectedPlanId(plan._id)}
-                      className={`text-foreground border hover:text-white ${
-                        selectedPlanId === plan._id
+                      className={`text-foreground border hover:text-white ${selectedPlanId === plan._id
                           ? "bg-primary/20 text-primary border-primary"
                           : "bg-transparent border-border hover:border-primary/50"
-                      }`}
+                        }`}
                     >
                       {plan.name}
                       {plan.isActive && (
