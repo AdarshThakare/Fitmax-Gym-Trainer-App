@@ -45,6 +45,14 @@ export default defineSchema({
     .index("by_user_id", ["userId"])
     .index("by_active", ["isActive"]),
 
+  customRoutines: defineTable({
+    userId: v.string(),
+    exerciseId: v.string(),
+    name: v.string(),
+    type: v.string(),
+    createdAt: v.number(),
+  }).index("by_user", ["userId"]),
+
   routines: defineTable({
     userId: v.string(),
     date: v.string(),

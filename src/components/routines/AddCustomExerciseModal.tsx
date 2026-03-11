@@ -11,10 +11,11 @@ interface Props {
     name: string;
     type: "weighted" | "bodyweight" | "duration";
   }) => void;
+  prefilledName?: string;
 }
 
-const AddCustomExerciseModal = ({ open, onClose, onSubmit }: Props) => {
-  const [name, setName] = useState("");
+const AddCustomExerciseModal = ({ open, onClose, onSubmit, prefilledName }: Props) => {
+  const [name, setName] = useState(prefilledName || "");
   const [type, setType] = useState<"weighted" | "bodyweight" | "duration">(
     "bodyweight"
   );
@@ -22,10 +23,11 @@ const AddCustomExerciseModal = ({ open, onClose, onSubmit }: Props) => {
   if (!open) return null;
 
   const handleSubmit = () => {
-    if (!name.trim()) return;
+    const finalName = prefilledName || name;
+    if (!finalName.trim()) return;
 
-    onSubmit({ name: name.trim(), type });
-    setName("");
+    onSubmit({ name: finalName.trim(), type });
+    setName(prefilledName || "");
     setType("bodyweight");
     onClose();
   };
@@ -38,8 +40,9 @@ const AddCustomExerciseModal = ({ open, onClose, onSubmit }: Props) => {
         <div className="space-y-4">
           <Input
             placeholder="Exercise name (e.g. Pull-ups)"
-            value={name}
+            value={prefilledName || name}
             onChange={(e) => setName(e.target.value)}
+            disabled={!!prefilledName}
           />
 
           <div className="space-y-2">

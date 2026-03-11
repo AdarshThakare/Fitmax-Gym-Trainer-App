@@ -12,15 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AppleIcon, CalendarIcon, DumbbellIcon } from "lucide-react";
 import StreakCard from "@/components/routines/StreakCard";
 
-interface MonthlyActivity {
-  [key: string]: {
-    [key: number]: boolean;
-  };
-}
-
-interface DailyLogCounts {
-  [key: string]: number;
-}
+import { useStreak } from "@/hooks/useStreak";
 
 import {
   Accordion,
@@ -43,71 +35,7 @@ const ProfilePage = () => {
 
   const routines = useQuery(api.routines.getUserRoutines, userId ? { userId } : "skip");
 
-  const [streak, setStreak] = useState(0);
-  const [lastActiveDate, setLastActiveDate] = useState("");
-
-  const [monthlyActivity, setMonthlyActivity] = useState<MonthlyActivity>({});
-  const [dailyLogCounts, setDailyLogCounts] = useState<DailyLogCounts>({});
-
-  // Load data from Convex
-  useEffect(() => {
-    if (routines === undefined) return;
-
-    const reverseRoutines = [...routines].reverse(); // Sort oldest to newest
-
-    let newStreak = 0;
-    let newLastActive = "";
-    const newMonthlyActivity: MonthlyActivity = {};
-    const newDailyLogCounts: DailyLogCounts = {};
-
-    let lastDateObj: Date | null = null;
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    for (const r of reverseRoutines) {
-      const d = new Date(r.date);
-      d.setHours(0, 0, 0, 0);
-
-      const mKey = `${d.getFullYear()}-${d.getMonth()}`;
-      const day = d.getDate();
-
-      if (!newMonthlyActivity[mKey]) newMonthlyActivity[mKey] = {};
-      newMonthlyActivity[mKey][day] = true;
-
-      const logKey = `${mKey}-${day}`;
-      newDailyLogCounts[logKey] = r.logCount || 1;
-
-      // For streak calculation
-      if (lastDateObj) {
-        const diffTime = Math.abs(d.getTime() - lastDateObj.getTime());
-        const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
-        if (diffDays === 1) {
-          newStreak++;
-        } else if (diffDays > 1) {
-          newStreak = 1;
-        }
-      } else {
-        newStreak = 1;
-      }
-      // Streak calculation continued...
-      lastDateObj = d;
-      newLastActive = r.date;
-    }
-
-    // Reset streak if we missed yesterday
-    if (lastDateObj) {
-      const diffTime = Math.abs(today.getTime() - lastDateObj.getTime());
-      const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
-      if (diffDays > 1) {
-        newStreak = 0;
-      }
-    }
-
-    setStreak(newStreak);
-    setLastActiveDate(newLastActive);
-    setMonthlyActivity(newMonthlyActivity);
-    setDailyLogCounts(newDailyLogCounts);
-  }, [routines]);
+  const { streak, lastActiveDate, monthlyActivity, dailyLogCounts } = useStreak(routines);
 
   const activePlan = allPlans?.find((plan) => plan.isActive);
 

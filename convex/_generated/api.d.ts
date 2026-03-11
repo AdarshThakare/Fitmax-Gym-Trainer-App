@@ -8,6 +8,7 @@
  * @module
  */
 
+import type * as customExercises from "../customExercises.js";
 import type * as http from "../http.js";
 import type * as plans from "../plans.js";
 import type * as routines from "../routines.js";
@@ -20,6 +21,7 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  customExercises: typeof customExercises;
   http: typeof http;
   plans: typeof plans;
   routines: typeof routines;

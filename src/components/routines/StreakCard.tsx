@@ -8,6 +8,7 @@ interface Props {
   lastActiveDate: string;
   monthlyActivity: Record<string, Record<number, boolean>>;
   dailyLogCounts: Record<string, number>;
+  compact?: boolean;
 }
 
 const getBrightnessClass = (count: number) => {
@@ -24,6 +25,7 @@ const StreakCard = ({
   lastActiveDate,
   monthlyActivity,
   dailyLogCounts,
+  compact = false,
 }: Props) => {
   const [currentDate, setCurrentDate] = useState(new Date());
 
@@ -94,10 +96,10 @@ const StreakCard = ({
   const years = Array.from({ length: 5 }, (_, i) => currentYear - 2 + i);
 
   return (
-    <div className="relative backdrop-blur-sm border border-border rounded-xl p-6 shadow-sm overflow-hidden">
-      <CornerElements />
+    <div className={`relative backdrop-blur-sm border border-border rounded-xl shadow-sm overflow-hidden ${compact ? "p-3 border-none bg-transparent" : "p-6"}`}>
+      {compact ? null : <CornerElements />}
 
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+      <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${compact ? "" : "mb-6"}`}>
         <div className="flex items-center gap-3">
           <div className="p-2 bg-orange-500/10 rounded-lg">
             <Flame className="h-8 w-8 text-orange-500 animate-pulse" />
@@ -114,8 +116,8 @@ const StreakCard = ({
         </div>
       </div>
 
-      {/* Calendar Section */}
-      <div className="bg-card/50 p-4 rounded-lg border border-border/50">
+      {compact ? null : (
+        <div className="bg-card/50 p-4 rounded-lg border border-border/50">
         <div className="flex flex-wrap gap-2 justify-between items-center mb-4">
           <div className="flex gap-2">
             <select
@@ -187,6 +189,7 @@ const StreakCard = ({
           <span>More</span>
         </div>
       </div>
+      )}
     </div>
   );
 };

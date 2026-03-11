@@ -1,7 +1,7 @@
 import PushupSection from "./PushupSection";
 import WeightLiftSection from "./WeightLiftSection";
 import CardioSection from "./CardioSection";
-import CustomExercisesSection from "./CustomExercisesSection";
+import CustomRoutineForm from "./CustomRoutineForm";
 import { Button } from "@/components/ui/button";
 
 interface Props {
@@ -66,9 +66,8 @@ const ExercisePanel = ({
         onUpdate={(i, v) => handlers.updateSet("cardio", i, "reps", v)}
       />
 
-      <CustomExercisesSection
+      <CustomRoutineForm
         exercises={customExercises}
-        onAddExercise={handlers.addCustomExercise}
         onRemoveExercise={handlers.removeCustomExercise}
         onAddSet={handlers.addCustomSet}
         onRemoveSet={handlers.removeCustomSet}
