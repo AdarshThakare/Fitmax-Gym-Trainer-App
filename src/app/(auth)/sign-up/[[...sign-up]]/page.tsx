@@ -1,12 +1,9 @@
-import { SignUp } from "@clerk/nextjs";
-import React from "react";
+import SignUpClient from "./SignUpClient";
 
-const SignUpPage = () => {
-  return (
-    <main className="flex h-screen w-full items-center justify-center">
-      <SignUp />
-    </main>
-  );
-};
+export function generateStaticParams() {
+  return [{ "sign-up": [] }];
+}
 
-export default SignUpPage;
+export default function Page() {
+  return <SignUpClient />;
+}

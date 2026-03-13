@@ -1,12 +1,9 @@
-import { SignIn } from "@clerk/nextjs";
-import React from "react";
+import SignInClient from "./SignInClient";
 
-const SignInPage = () => {
-  return (
-    <main className="flex h-screen w-full items-center justify-center">
-      <SignIn />
-    </main>
-  );
-};
+export function generateStaticParams() {
+  return [{ "sign-in": [] }];
+}
 
-export default SignInPage;
+export default function Page() {
+  return <SignInClient />;
+}
