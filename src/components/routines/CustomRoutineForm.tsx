@@ -32,7 +32,7 @@ const CustomRoutineForm = ({
 }: Props) => {
   if (exercises.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center p-8 text-center border rounded-xl border-dashed bg-card/50">
+      <div className="flex flex-col items-center justify-center p-8 text-center border rounded-none border-dashed bg-card/50">
         <Activity className="w-10 h-10 text-muted-foreground/30 mb-3" />
         <p className="text-muted-foreground font-medium">No custom exercises added yet.</p>
         <p className="text-xs text-muted-foreground/80 mt-1 max-w-[300px]">Head over to the Explore tab to discover exercises and add them to your routine log.</p>
@@ -49,7 +49,7 @@ const CustomRoutineForm = ({
           icon={Activity}
         >
           <div className="flex items-center justify-between mb-3">
-            <span className="text-xs bg-primary/20 text-primary px-2 py-1 rounded font-mono">
+            <span className="text-xs bg-primary/20 text-primary px-2 py-1 rounded-md font-mono">
               {exercise.type}
             </span>
             <Button
@@ -114,7 +114,7 @@ const CustomRoutineForm = ({
             onClick={() => onAddSet(exercise.id)}
             variant="outline"
             size="sm"
-            className="w-full mt-4 border-primary/20 hover:border-primary"
+            className="w-full mt-4 border-primary/20 hover:border-primary rounded-none"
           >
             <Plus className="h-4 w-4 mr-2" />
             Add Set

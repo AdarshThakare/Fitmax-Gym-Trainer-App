@@ -1,5 +1,6 @@
 import React, { useMemo } from "react";
 import ReactECharts from "echarts-for-react";
+import CornerElements from "../CornerElements";
 
 interface Routine {
     date: string;
@@ -50,6 +51,7 @@ const ComparativeAnalysisChart = ({ routines }: Props) => {
         const maxCycle = Math.max(10, todayMetrics.cycleTime, yesterdayMetrics.cycleTime) * 1.2;
 
         return {
+            backgroundColor: "transparent",
             tooltip: {
                 trigger: "item",
                 backgroundColor: "rgba(17, 24, 39, 0.8)",
@@ -117,7 +119,8 @@ const ComparativeAnalysisChart = ({ routines }: Props) => {
     }, [routines]);
 
     return (
-        <div className="bg-card w-full rounded-xl border shadow-sm p-4 relative flex flex-col items-center">
+        <div className="bg-card w-full rounded-none border shadow-sm p-4 relative flex flex-col items-center overflow-hidden h-full">
+            <CornerElements />
             <div className="flex w-full items-center justify-between mb-2">
                 <h3 className="text-lg font-bold tracking-tight">Today vs Yesterday</h3>
             </div>

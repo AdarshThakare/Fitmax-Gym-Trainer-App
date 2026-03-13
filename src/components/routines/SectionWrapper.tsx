@@ -9,7 +9,7 @@ interface Props {
 
 const SectionWrapper = ({ title, icon: Icon, children }: Props) => {
   return (
-    <div className="relative backdrop-blur-sm border border-border rounded-lg p-6">
+    <div className="relative backdrop-blur-sm border border-border rounded-none p-6 overflow-hidden">
       <CornerElements />
       <div className="flex items-center gap-2 mb-4">
         <Icon className="h-5 w-5 text-primary" />

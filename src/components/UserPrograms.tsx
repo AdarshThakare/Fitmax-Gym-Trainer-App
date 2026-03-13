@@ -16,6 +16,7 @@ import {
   AppleIcon,
   ShieldIcon,
 } from "lucide-react";
+import CornerElements from "./CornerElements";
 import { USER_PROGRAMS } from "@/constants";
 
 const UserPrograms = () => {
@@ -23,11 +24,12 @@ const UserPrograms = () => {
     <div className="w-full pb-24 pt-16 relative">
       <div className="container mx-auto max-w-6xl px-4">
         {/* HEADER- PROGRAM GALLERY */}
-        <div className="bg-card/90 backdrop-blur-sm border border-border rounded-lg overflow-hidden mb-16">
+        <div className="bg-card/90 backdrop-blur-sm border border-border rounded-none overflow-hidden mb-16 relative">
+          <CornerElements />
           {/* HEADER BAR */}
           <div className="flex items-center justify-between px-5 py-3 border-b border-border bg-background/70">
             <div className="flex items-center gap-2">
-              <div className="w-2.5 h-2.5 rounded-full bg-primary"></div>
+              <div className="w-2.5 h-2.5 rounded-none bg-primary"></div>
               <span className="text-sm text-primary font-medium">
                 Program Gallery
               </span>
@@ -78,12 +80,13 @@ const UserPrograms = () => {
           {USER_PROGRAMS.map((program) => (
             <Card
               key={program.id}
-              className="bg-card/90 backdrop-blur-sm border border-border hover:border-primary/50 transition-colors overflow-hidden"
+              className="bg-card/90 backdrop-blur-sm border border-border hover:border-primary/50 transition-colors overflow-hidden rounded-none relative"
             >
+              <CornerElements />
               {/* Card header with user info */}
               <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-background/70">
                 <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-primary"></div>
+                  <div className="w-2 h-2 rounded-none bg-primary"></div>
                   <span className="text-sm text-primary">
                     USER.{program.id}
                   </span>
@@ -95,7 +98,7 @@ const UserPrograms = () => {
 
               <CardHeader className="pt-6 px-5">
                 <div className="flex items-center gap-4 mb-4">
-                  <div className="h-16 w-16 rounded-full overflow-hidden border border-border">
+                  <div className="h-16 w-16 rounded-none overflow-hidden border border-border">
                     <img
                       src={program.profilePic}
                       alt={`${program.first_name}`}
@@ -115,7 +118,7 @@ const UserPrograms = () => {
                 </div>
 
                 <div className="flex justify-between items-center gap-4">
-                  <div className="px-3 py-1 bg-primary/10 rounded border border-primary/20 text-sm text-primary flex items-center gap-2">
+                  <div className="px-3 py-1 bg-primary/10 rounded-none border border-primary/20 text-sm text-primary flex items-center gap-2">
                     <Sparkles className="h-4 w-4" />
                     {program.fitness_goal}
                   </div>
@@ -130,7 +133,7 @@ const UserPrograms = () => {
                 {/* Program details */}
                 <div className="space-y-5 pt-2">
                   <div className="flex items-start gap-3">
-                    <div className="p-2 rounded-md bg-primary/10 text-primary mt-0.5">
+                    <div className="p-2 rounded-none bg-primary/10 text-primary mt-0.5">
                       <Dumbbell className="h-5 w-5" />
                     </div>
                     <div className="flex-1">
@@ -146,7 +149,7 @@ const UserPrograms = () => {
                   </div>
 
                   <div className="flex items-start gap-3">
-                    <div className="p-2 rounded-md bg-secondary/10 text-secondary mt-0.5">
+                    <div className="p-2 rounded-none bg-secondary/10 text-secondary mt-0.5">
                       <AppleIcon className="h-5 w-5" />
                     </div>
                     <div className="flex-1">
@@ -162,7 +165,7 @@ const UserPrograms = () => {
                   </div>
 
                   <div className="flex items-start gap-3">
-                    <div className="p-2 rounded-md bg-primary/10 text-primary mt-0.5">
+                    <div className="p-2 rounded-none bg-primary/10 text-primary mt-0.5">
                       <ShieldIcon className="h-5 w-5" />
                     </div>
                     <div className="flex-1">

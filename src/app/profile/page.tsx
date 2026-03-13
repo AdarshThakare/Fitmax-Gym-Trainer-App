@@ -13,6 +13,8 @@ import { AppleIcon, CalendarIcon, DumbbellIcon } from "lucide-react";
 import StreakCard from "@/components/routines/StreakCard";
 
 import { useStreak } from "@/hooks/useStreak";
+import { usePerformanceStats } from "@/hooks/usePerformanceStats";
+import PerformanceRadarChart from "@/components/routines/charts/PerformanceRadarChart";
 
 import {
   Accordion,
@@ -36,6 +38,7 @@ const ProfilePage = () => {
   const routines = useQuery(api.routines.getUserRoutines, userId ? { userId } : "skip");
 
   const { streak, lastActiveDate, monthlyActivity, dailyLogCounts } = useStreak(routines);
+  const perfStats = usePerformanceStats(routines);
 
   const activePlan = allPlans?.find((plan) => plan.isActive);
 
@@ -63,15 +66,22 @@ const ProfilePage = () => {
         <div>
           {allPlans && allPlans?.length > 0 ? (
             <div className="space-y-8">
-              <StreakCard
-                streak={streak}
-                lastActiveDate={lastActiveDate}
-                monthlyActivity={monthlyActivity as Record<string, Record<number, boolean>>}
-                dailyLogCounts={dailyLogCounts as Record<string, number>}
-              />
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div className="lg:col-span-2">
+                  <StreakCard
+                    streak={streak}
+                    lastActiveDate={lastActiveDate}
+                    monthlyActivity={monthlyActivity as Record<string, Record<number, boolean>>}
+                    dailyLogCounts={dailyLogCounts as Record<string, number>}
+                  />
+                </div>
+                <div className="lg:col-span-1">
+                  <PerformanceRadarChart stats={perfStats} />
+                </div>
+              </div>
 
               {/* PLAN SELECTOR */}
-              <div className="relative backdrop-blur-sm border border-border p-6 rounded-lg">
+              <div className="relative backdrop-blur-sm border border-border p-6 rounded-none overflow-hidden">
                 <CornerElements />
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-xl font-bold tracking-tight">
@@ -89,18 +99,18 @@ const ProfilePage = () => {
                       key={plan._id}
                       onClick={() => setSelectedPlanId(plan._id)}
                       className={`text-foreground border hover:text-white ${selectedPlanId === plan._id
-                          ? "bg-primary/20 text-primary border-primary"
-                          : "bg-transparent border-border hover:border-primary/50"
+                        ? "bg-primary/20 text-primary border-primary"
+                        : "bg-transparent border-border hover:border-primary/50"
                         }`}
                     >
                       {plan.name}
                       {plan.isActive && (
-                        <span className="ml-2 bg-green-500/20 text-green-500 text-xs px-2 py-0.5 rounded">
+                        <span className="ml-2 bg-green-500/20 text-green-500 text-xs px-2 py-0.5 rounded-md font-bold">
                           ACTIVE
                         </span>
                       )}
                       <div
-                        className="rotate-45 text-lg bg-transparent hover:text-black rounded-full px-1  text-white"
+                        className="rotate-45 text-lg bg-transparent hover:text-black rounded-md px-1  text-white"
                         onClick={() => {
                           handleDelete(plan._id);
                         }}
@@ -115,11 +125,11 @@ const ProfilePage = () => {
               {/* PLAN DETAILS */}
 
               {currentPlan && (
-                <div className="relative backdrop-blur-sm border border-border rounded-lg p-6">
+                <div className="relative backdrop-blur-sm border border-border rounded-none p-6 overflow-hidden">
                   <CornerElements />
 
                   <div className="flex items-center gap-2 mb-4">
-                    <div className="w-2 h-2 rounded-full bg-primary animate-pulse"></div>
+                    <div className="w-2 h-2 rounded-none bg-primary animate-pulse"></div>
                     <h3 className="text-lg font-bold">
                       PLAN:{" "}
                       <span className="text-primary">{currentPlan.name}</span>
@@ -161,7 +171,7 @@ const ProfilePage = () => {
                               <AccordionItem
                                 key={index}
                                 value={exerciseDay.day}
-                                className="border rounded-lg overflow-hidden"
+                                className="border rounded-none overflow-hidden"
                               >
                                 <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-primary/10 font-mono">
                                   <div className="flex justify-between w-full items-center">
@@ -180,17 +190,17 @@ const ProfilePage = () => {
                                       (routine, routineIndex) => (
                                         <div
                                           key={routineIndex}
-                                          className="border border-border rounded p-3 bg-background/50"
+                                          className="border border-border rounded-none p-3 bg-background/50"
                                         >
                                           <div className="flex justify-between items-start mb-2">
                                             <h4 className="font-semibold text-foreground">
                                               {routine.name}
                                             </h4>
                                             <div className="flex items-center gap-2">
-                                              <div className="px-2 py-1 rounded bg-primary/20 text-primary text-xs font-mono">
+                                              <div className="px-2 py-1 rounded-md bg-primary/20 text-primary text-xs font-mono">
                                                 {routine.sets} SETS
                                               </div>
-                                              <div className="px-2 py-1 rounded bg-secondary/20 text-secondary text-xs font-mono">
+                                              <div className="px-2 py-1 rounded-md bg-secondary/20 text-secondary text-xs font-mono">
                                                 {routine.reps} REPS
                                               </div>
                                             </div>
@@ -229,10 +239,10 @@ const ProfilePage = () => {
                           {currentPlan.dietPlan.meals.map((meal, index) => (
                             <div
                               key={index}
-                              className="border border-border rounded-lg overflow-hidden p-4"
+                              className="border border-border rounded-none overflow-hidden p-4"
                             >
                               <div className="flex items-center gap-2 mb-3">
-                                <div className="w-2 h-2 rounded-full bg-primary"></div>
+                                <div className="w-2 h-2 rounded-none bg-primary"></div>
                                 <h4 className="font-mono text-primary">
                                   {meal.name}
                                 </h4>

@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from "react";
 import ReactECharts from "echarts-for-react";
+import CornerElements from "../CornerElements";
 
 interface Routine {
     date: string;
@@ -111,6 +112,7 @@ const CustomTimeframeAnalysisChart = ({ routines }: Props) => {
         }
 
         return {
+            backgroundColor: "transparent",
             tooltip: {
                 trigger: "axis",
                 axisPointer: { type: "cross", label: { backgroundColor: "#6a7985" } },
@@ -179,15 +181,16 @@ const CustomTimeframeAnalysisChart = ({ routines }: Props) => {
     }, [routines, timeframe]);
 
     return (
-        <div className="bg-card w-full rounded-xl border shadow-sm p-4 relative flex flex-col items-center">
+        <div className="bg-card w-full rounded-none border shadow-sm p-4 relative flex flex-col items-center overflow-hidden">
+            <CornerElements />
             <div className="flex w-full items-center justify-between mb-2">
                 <h3 className="text-lg font-bold tracking-tight">Timeline Analytics</h3>
-                <div className="flex gap-1 bg-muted p-1 rounded-md">
+                <div className="flex gap-1 bg-muted p-1 rounded-lg">
                     {(["weekly", "monthly", "yearly"] as Timeframe[]).map((t) => (
                         <button
                             key={t}
                             onClick={() => setTimeframe(t)}
-                            className={`px-3 py-1 text-xs rounded-sm transition-colors ${timeframe === t
+                            className={`px-3 py-1 text-xs rounded-md transition-colors ${timeframe === t
                                     ? "bg-background text-foreground shadow-sm font-medium"
                                     : "text-muted-foreground hover:text-foreground"
                                 }`}

@@ -10,7 +10,7 @@ const ProfileHeader = ({ user }: { user: UserResource | null | undefined }) => {
       <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
         <div className="relative">
           {user.imageUrl ? (
-            <div className="relative w-24 h-24 overflow-hidden rounded-lg">
+            <div className="relative w-24 h-24 overflow-hidden rounded-full">
               <img
                 src={user.imageUrl}
                 alt={user.fullName || "Profile"}
@@ -18,7 +18,7 @@ const ProfileHeader = ({ user }: { user: UserResource | null | undefined }) => {
               />
             </div>
           ) : (
-            <div className="w-24 h-24 rounded-lg bg-linear-to-br from-primary/30 to-secondary/30 flex items-center justify-center">
+            <div className="w-24 h-24 rounded-full bg-linear-to-br from-primary/30 to-secondary/30 flex items-center justify-center">
               <span className="text-3xl font-bold text-primary">
                 {user.fullName?.charAt(0) || "U"}
               </span>
@@ -32,7 +32,7 @@ const ProfileHeader = ({ user }: { user: UserResource | null | undefined }) => {
             <h1 className="text-3xl font-bold tracking-tight">
               <span className="text-foreground">{user.fullName}</span>
             </h1>
-            <div className="flex items-center bg-cyber-terminal-bg backdrop-blur-sm border border-border rounded px-3 py-1">
+            <div className="flex items-center bg-cyber-terminal-bg backdrop-blur-sm border border-border rounded-full px-3 py-1">
               <div className="w-2 h-2 rounded-full bg-primary animate-pulse mr-2"></div>
               <p className="text-xs font-mono text-primary">USER ACTIVE</p>
             </div>

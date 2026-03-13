@@ -79,7 +79,7 @@ const StreakCard = ({
         <div
           key={day}
           title={`${count} workouts on ${currentDate.toLocaleDateString('default', { month: 'long', year: 'numeric' })} ${day}`}
-          className={`h-10 w-full flex items-center justify-center rounded-md font-mono text-sm border transition-colors cursor-default
+          className={`h-10 w-full flex items-center justify-center rounded-none font-mono text-sm border transition-colors cursor-default
             ${isToday ? "ring-2 ring-primary ring-offset-1 ring-offset-background" : ""}
             ${getBrightnessClass(count)}
           `}
@@ -96,12 +96,12 @@ const StreakCard = ({
   const years = Array.from({ length: 5 }, (_, i) => currentYear - 2 + i);
 
   return (
-    <div className={`relative backdrop-blur-sm border border-border rounded-xl shadow-sm overflow-hidden ${compact ? "p-3 border-none bg-transparent" : "p-6"}`}>
+    <div className={`relative backdrop-blur-sm border border-border rounded-none shadow-sm overflow-hidden ${compact ? "p-3 border-none bg-transparent" : "p-6"}`}>
       {compact ? null : <CornerElements />}
 
       <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${compact ? "" : "mb-6"}`}>
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-orange-500/10 rounded-lg">
+          <div className="p-2 bg-orange-500/10 rounded-none">
             <Flame className="h-8 w-8 text-orange-500 animate-pulse" />
           </div>
           <div>
@@ -117,7 +117,7 @@ const StreakCard = ({
       </div>
 
       {compact ? null : (
-        <div className="bg-card/50 p-4 rounded-lg border border-border/50">
+        <div className="bg-card/50 p-4 rounded-none border border-border/50">
         <div className="flex flex-wrap gap-2 justify-between items-center mb-4">
           <div className="flex gap-2">
             <select
@@ -148,7 +148,7 @@ const StreakCard = ({
             <Button
               variant="outline"
               size="icon"
-              className="h-8 w-8 rounded-md"
+              className="h-8 w-8 rounded-none"
               onClick={handlePrevMonth}
             >
               <ChevronLeft className="h-4 w-4" />
@@ -156,7 +156,7 @@ const StreakCard = ({
             <Button
               variant="outline"
               size="icon"
-              className="h-8 w-8 rounded-md"
+              className="h-8 w-8 rounded-none"
               onClick={handleNextMonth}
             >
               <ChevronRight className="h-4 w-4" />
@@ -180,11 +180,11 @@ const StreakCard = ({
         <div className="flex items-center justify-end gap-2 mt-4 text-xs text-muted-foreground">
           <span>Less</span>
           <div className="flex gap-1.5">
-            <div className="w-4 h-4 rounded-sm bg-background border border-border"></div>
-            <div className="w-4 h-4 rounded-sm bg-primary/40 border border-primary/40"></div>
-            <div className="w-4 h-4 rounded-sm bg-primary/60 border border-primary/60"></div>
-            <div className="w-4 h-4 rounded-sm bg-primary/80 border border-primary/80"></div>
-            <div className="w-4 h-4 rounded-sm bg-primary border border-primary"></div>
+            <div className="w-4 h-4 rounded-full bg-background border border-border"></div>
+            <div className="w-4 h-4 rounded-full bg-primary/40 border border-primary/40"></div>
+            <div className="w-4 h-4 rounded-full bg-primary/60 border border-primary/60"></div>
+            <div className="w-4 h-4 rounded-full bg-primary/80 border border-primary/80"></div>
+            <div className="w-4 h-4 rounded-full bg-primary border border-primary"></div>
           </div>
           <span>More</span>
         </div>

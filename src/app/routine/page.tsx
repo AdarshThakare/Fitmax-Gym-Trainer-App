@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useUser } from "@clerk/nextjs";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
+import { motion, AnimatePresence } from "framer-motion";
 
 // UI
 import { Button } from "@/components/ui/button";
@@ -20,6 +21,7 @@ import {
 } from "@/components/ui/alert-dialog";
 
 // Sections
+import CornerElements from "@/components/CornerElements";
 import PushupSection from "@/components/routines/PushupSection";
 import WeightLiftSection from "@/components/routines/WeightLiftSection";
 import CustomExercisesSection, { ExerciseDBItem } from "@/components/routines/CustomExercisesSection";
@@ -256,7 +258,7 @@ const RoutinesPage = () => {
         }
       );
     }
-    
+
     // 3. Auto-redirect to the Custom tab
     setActiveTab("custom");
   };
@@ -298,12 +300,20 @@ const RoutinesPage = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8 w-full max-w-7xl mx-auto items-start">
         <div className="flex flex-col gap-6 w-full">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="simple">Simple</TabsTrigger>
-              <TabsTrigger value="explore">Explore</TabsTrigger>
-              <TabsTrigger value="custom">Custom</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-3 rounded-lg">
+              <TabsTrigger value="simple" className="rounded-md">Simple</TabsTrigger>
+              <TabsTrigger value="explore" className="rounded-md">Explore</TabsTrigger>
+              <TabsTrigger value="custom" className="rounded-md">Custom</TabsTrigger>
             </TabsList>
-            <TabsContent value="simple" className="space-y-6 mt-6">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeTab}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.2, ease: "easeInOut" }}
+              >
+                <TabsContent value="simple" forceMount className={activeTab === "simple" ? "space-y-6 mt-6" : "hidden"}>
               <PushupSection
                 sets={pushupSets}
                 onAdd={() =>
@@ -384,19 +394,19 @@ const RoutinesPage = () => {
               <Button
                 disabled={!hasAnyActivity()}
                 onClick={handleSubmitRoutine}
-                className="w-full py-6 mt-6 text-lg font-bold disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full py-6 mt-6 text-lg font-bold disabled:opacity-50 disabled:cursor-not-allowed rounded-md"
               >
                 LOG ROUTINE
               </Button>
             </TabsContent>
-            <TabsContent value="explore" className="space-y-6 mt-6">
+            <TabsContent value="explore" forceMount className={activeTab === "explore" ? "space-y-6 mt-6" : "hidden"}>
               <CustomExercisesSection
                 onSelectExerciseDetails={setSelectedCustomExercise}
                 onAddExercise={(data) => handleAddCustomExercise({ ...data, id: data.name.toLowerCase().replace(/\s+/g, '-') })}
               />
             </TabsContent>
 
-            <TabsContent value="custom" className="space-y-6 mt-6">
+            <TabsContent value="custom" forceMount className={activeTab === "custom" ? "space-y-6 mt-6" : "hidden"}>
               <CustomRoutineForm
                 exercises={customExercises}
                 onRemoveExercise={(id) => {
@@ -454,15 +464,17 @@ const RoutinesPage = () => {
                   )
                 }
               />
-              <Button
-                disabled={!hasAnyActivity()}
-                onClick={handleSubmitRoutine}
-                className="w-full py-6 mt-6 text-lg font-bold disabled:opacity-50 disabled:cursor-not-allowed shadow-md bg-gradient-to-r from-primary to-blue-500"
-              >
-                LOG ROUTINE
-              </Button>
-            </TabsContent>
-          </Tabs>
+                <Button
+                  disabled={!hasAnyActivity()}
+                  onClick={handleSubmitRoutine}
+                  className="w-full py-6 mt-6 text-lg font-bold disabled:opacity-50 disabled:cursor-not-allowed shadow-md bg-gradient-to-r from-primary to-blue-500 rounded-md"
+                >
+                  LOG ROUTINE
+                </Button>
+              </TabsContent>
+            </motion.div>
+          </AnimatePresence>
+        </Tabs>
         </div>
 
         <div className="flex flex-col gap-6 w-full md:sticky md:top-24 md:mt-0 lg:-mt-2">
@@ -506,7 +518,8 @@ const RoutinesPage = () => {
           <div className="lg:col-span-2">
             <TimeframeAnalysisChart routines={routines} />
           </div>
-          <div className="lg:col-span-1 border rounded-xl overflow-hidden shadow-sm h-full">
+          <div className="lg:col-span-1 border rounded-none overflow-hidden shadow-sm h-full relative">
+            <CornerElements />
             <ActivityPieChart routines={routines} />
           </div>
         </div>
@@ -517,7 +530,8 @@ const RoutinesPage = () => {
           <div className="lg:col-span-2">
             <CustomTimeframeAnalysisChart routines={routines} />
           </div>
-          <div className="lg:col-span-1 border rounded-xl overflow-hidden shadow-sm h-full">
+          <div className="lg:col-span-1 border rounded-none overflow-hidden shadow-sm h-full relative">
+            <CornerElements />
             <CustomActivityPieChart routines={routines} />
           </div>
         </div>

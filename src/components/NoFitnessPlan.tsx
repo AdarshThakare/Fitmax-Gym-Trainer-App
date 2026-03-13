@@ -5,7 +5,7 @@ import { ArrowRightIcon } from "lucide-react";
 
 const NoFitnessPlan = () => {
   return (
-    <div className="relative backdrop-blur-sm border border-border rounded-lg p-10 text-center">
+    <div className="relative backdrop-blur-sm border border-border rounded-none p-10 text-center">
       <CornerElements />
 
       <h2 className="text-2xl font-bold mb-4 font-mono">
@@ -18,7 +18,7 @@ const NoFitnessPlan = () => {
       <Button
         size="lg"
         asChild
-        className="relative overflow-hidden bg-primary text-primary-foreground px-8 py-6 text-lg font-medium"
+        className="relative overflow-hidden bg-primary text-primary-foreground px-8 py-6 text-lg font-medium rounded-none"
       >
         <Link href="/generate-program">
           <span className="relative flex items-center">

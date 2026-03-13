@@ -1,4 +1,5 @@
 import { ZapIcon } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 
 const Footer = () => {
@@ -12,9 +13,7 @@ const Footer = () => {
           {/* Logo and Copyright */}
           <div className="flex flex-col items-center md:items-start gap-2">
             <Link href="/" className="flex items-center gap-2">
-              <div className="p-1 bg-primary/10 rounded">
-                <ZapIcon className="w-4 h-4 text-primary" />
-              </div>
+              <Image src="/logo.png" alt="Logo" width={36} height={36} className="p-0.5 bg-primary/10 rounded-full" />
               <span className="text-xl font-bold font-mono">
                 Fit<span className="text-primary">max</span>.ai
               </span>
@@ -65,7 +64,7 @@ const Footer = () => {
           </div>
 
           {/* Status */}
-          <div className="flex items-center gap-2 px-3 py-2 border border-border rounded-md bg-background/50">
+          <div className="flex items-center gap-2 px-3 py-2 border border-border rounded-full bg-background/50">
             <div className="w-2 h-2 rounded-full bg-green-500"></div>
             <span className="text-xs font-mono">SYSTEM OPERATIONAL</span>
           </div>

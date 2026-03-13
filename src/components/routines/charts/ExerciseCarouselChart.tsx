@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import ReactECharts from "echarts-for-react";
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from "lucide-react";
+import CornerElements from "../CornerElements";
 import { format, isSameDay } from "date-fns";
 
 import { Calendar } from "@/components/ui/calendar";
@@ -46,14 +47,13 @@ const ExerciseCarouselChart = ({
     crunchesSets,
     squatsSets,
 }: Props) => {
-    const [currentIndex, setCurrentIndex] = useState(0);
-    const [selectedDate, setSelectedDate] = useState<Date>(new Date());
     const { streak, lastActiveDate, monthlyActivity, dailyLogCounts } = useStreak(routines);
+    const [activeIndex, setActiveIndex] = useState(0);
 
     const exercises = useMemo(() => {
         // Find the routine that corresponds to the same day as selectedDate using the reliable string parser
-        const targetRoutine = routines.find(r => isSameDay(new Date(r.date), selectedDate));
-        const isToday = isSameDay(selectedDate, new Date());
+        const targetRoutine = routines.find(r => isSameDay(new Date(r.date), new Date())); // Changed to new Date() for current day
+        const isToday = isSameDay(new Date(), new Date()); // Always true for "today's" sets
 
         const pushupsData = [
             ...(targetRoutine?.pushupSetsDetail?.map(s => s.reps) || []),
@@ -90,41 +90,42 @@ const ExerciseCarouselChart = ({
         ];
 
         const defaultEx = [
-            { id: "pushups", label: "Pushups (Reps)", data: pushupsData },
-            { id: "crunches", label: "Crunches (Reps)", data: crunchesData },
-            { id: "squats", label: "Squats (Reps)", data: squatsData },
-            { id: "weightlifts", label: "Weight Lifting (Reps)", data: weightliftsData },
-            { id: "runningTime", label: "Running Duration (Mins)", data: runningData },
-            { id: "runningDistance", label: "Running Distance (Km)", data: runningDistance },
-            { id: "cyclingTime", label: "Cycling Duration (Mins)", data: cyclingData },
-            { id: "cyclingDistance", label: "Cycling Distance (Km)", data: cyclingDistance },
+            { id: "pushups", label: "Pushups (Reps)", data: pushupsData, color: "#3b82f6" },
+            { id: "crunches", label: "Crunches (Reps)", data: crunchesData, color: "#ef4444" },
+            { id: "squats", label: "Squats (Reps)", data: squatsData, color: "#8b5cf6" },
+            { id: "weightlifts", label: "Weight Lifting (Reps)", data: weightliftsData, color: "#10b981" },
+            { id: "runningTime", label: "Running Duration (Mins)", data: runningData, color: "#f59e0b" },
+            { id: "runningDistance", label: "Running Distance (Km)", data: runningDistance, color: "#f59e0b" },
+            { id: "cyclingTime", label: "Cycling Duration (Mins)", data: cyclingData, color: "#f59e0b" },
+            { id: "cyclingDistance", label: "Cycling Distance (Km)", data: cyclingDistance, color: "#f59e0b" },
         ];
 
         return defaultEx;
-    }, [routines, pushupSets, weightliftSets, cardioSets, crunchesSets, squatsSets, selectedDate]);
+    }, [routines, pushupSets, weightliftSets, cardioSets, crunchesSets, squatsSets]);
 
     // Handle bounds if custom exercises are deleted
     useEffect(() => {
-        if (currentIndex >= exercises.length) {
-            setCurrentIndex(0);
+        if (activeIndex >= exercises.length) {
+            setActiveIndex(0);
         }
-    }, [exercises.length, currentIndex]);
+    }, [exercises.length, activeIndex]);
 
     const handlePrev = () => {
-        setCurrentIndex((prev) => (prev === 0 ? exercises.length - 1 : prev - 1));
+        setActiveIndex((prev) => (prev === 0 ? exercises.length - 1 : prev - 1));
     };
 
     const handleNext = () => {
-        setCurrentIndex((prev) => (prev === exercises.length - 1 ? 0 : prev + 1));
+        setActiveIndex((prev) => (prev === exercises.length - 1 ? 0 : prev + 1));
     };
 
-    const currentExercise = exercises[currentIndex] || exercises[0];
+    const currentExercise = exercises[activeIndex] || exercises[0];
 
     const chartOptions = useMemo(() => {
         const data = currentExercise.data;
         const categories = data.map((_, i) => `Set ${i + 1}`);
 
         return {
+            backgroundColor: "transparent",
             tooltip: {
                 trigger: "axis",
                 axisPointer: { type: "shadow" },
@@ -164,8 +165,8 @@ const ExerciseCarouselChart = ({
                             x2: 0,
                             y2: 1,
                             colorStops: [
-                                { offset: 0, color: "#3b82f6" }, // top
-                                { offset: 1, color: "#1d4ed8" }, // bottom
+                                { offset: 0, color: currentExercise.color }, // top
+                                { offset: 1, color: currentExercise.color + "80" }, // bottom with transparency
                             ],
                         },
                         borderRadius: [4, 4, 0, 0],
@@ -178,7 +179,7 @@ const ExerciseCarouselChart = ({
     // Compute Stats dynamically for the selected exercise
     const stats = useMemo(() => {
         let bestSet = 0;
-        let bestDay = 0;
+        let maxVolume = 0; // Renamed bestDay to maxVolume for clarity
         let activeDaysCount = 0;
 
         for (const r of routines) {
@@ -246,64 +247,33 @@ const ExerciseCarouselChart = ({
             }
 
             if (dayHasActivity) activeDaysCount++;
-            if (dayTotal > bestDay) bestDay = dayTotal;
+            if (dayTotal > maxVolume) maxVolume = dayTotal;
         }
 
-        return { bestSet, bestDay, activeDaysCount };
+        return { bestSet, maxVolume, activeDaysCount };
     }, [routines, currentExercise.id]);
 
     return (
-        <div className="bg-card w-full rounded-xl border shadow-sm p-4 relative flex flex-col items-center">
-
-            {/* Header with Date Picker */}
-            <div className="flex w-full items-center justify-between mb-2">
-                <Popover>
-                    <PopoverTrigger asChild>
-                        <Button
-                            variant={"outline"}
-                            className={cn(
-                                "w-[240px] justify-start text-left font-normal bg-background/50 backdrop-blur-sm border-primary/20 hover:border-primary/50 transition-colors",
-                                !selectedDate && "text-muted-foreground"
-                            )}
-                        >
-                            <CalendarIcon className="mr-2 h-4 w-4 text-primary" />
-                            {selectedDate ? format(selectedDate, "PPP") : <span>Pick a date</span>}
-                        </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                            mode="single"
-                            selected={selectedDate}
-                            onSelect={(date) => date && setSelectedDate(date)}
-                            disabled={(date) => date > new Date() || date < new Date("1900-01-01")}
-                            initialFocus
-                        />
-                    </PopoverContent>
-                </Popover>
-            </div>
+        <div className="bg-card w-full border shadow-sm p-4 relative flex flex-col items-center overflow-hidden">
+            <CornerElements />
 
             {/* Carousel Controls */}
-            <div className="flex w-full items-center justify-between mb-4 mt-2">
-                <button
+            <div className="w-full flex items-center justify-between mb-4">
+                <Button
+                    variant="ghost"
+                    size="icon"
                     onClick={handlePrev}
-                    className="p-2 hover:bg-primary/20 rounded-full transition-colors text-primary"
                 >
-                    <ChevronLeft className="w-5 h-5" />
-                </button>
-                <div className="flex flex-col items-center">
-                    <h3 className="text-lg font-bold tracking-tight text-center">
-                        {currentExercise.label}
-                    </h3>
-                    <span className="text-muted-foreground text-sm font-normal">
-                        {isSameDay(selectedDate, new Date()) ? "Today's" : format(selectedDate, "MMM do")} Sets Tracker
-                    </span>
-                </div>
-                <button
+                    <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <h3 className="text-lg font-bold tracking-tight">{currentExercise.label}</h3>
+                <Button
+                    variant="ghost"
+                    size="icon"
                     onClick={handleNext}
-                    className="p-2 hover:bg-primary/20 rounded-full transition-colors text-primary"
                 >
-                    <ChevronRight className="w-5 h-5" />
-                </button>
+                    <ChevronRight className="h-4 w-4" />
+                </Button>
             </div>
 
             <div className="w-full h-[300px]">
@@ -318,20 +288,20 @@ const ExerciseCarouselChart = ({
             {/* Dynamic Stats Row & Streak */}
             <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-4 mt-6 items-stretch">
                 <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <div className="bg-secondary/20 p-4 rounded-lg flex flex-col justify-center border">
+                    <div className="bg-secondary/20 p-4 rounded-none flex flex-col justify-center border">
                         <span className="text-xs text-muted-foreground uppercase tracking-wider font-semibold mb-1">Lifetime Best Set</span>
-                        <div className="text-2xl font-bold">{stats.bestSet.toLocaleString()} <span className="text-sm font-normal text-muted-foreground">{currentExercise.label.split("(")[1]?.replace(")", "") || "Reps"}</span></div>
+                        <div className="text-2xl font-bold">{stats.bestSet} <span className="text-sm font-normal text-muted-foreground">{currentExercise.label.split("(")[1]?.replace(")", "") || "Reps"}</span></div>
                     </div>
-                    <div className="bg-secondary/20 p-4 rounded-lg flex flex-col justify-center border">
-                        <span className="text-xs text-muted-foreground uppercase tracking-wider font-semibold mb-1">Lifetime Best Day</span>
-                        <div className="text-2xl font-bold">{stats.bestDay.toLocaleString()} <span className="text-sm font-normal text-muted-foreground">{currentExercise.label.split("(")[1]?.replace(")", "") || "Reps"}</span></div>
+                    <div className="bg-secondary/20 p-4 rounded-none flex flex-col justify-center border">
+                        <span className="text-xs text-muted-foreground uppercase tracking-wider font-semibold mb-1">Max Volume</span>
+                        <div className="text-2xl font-bold">{stats.maxVolume} <span className="text-sm font-normal text-muted-foreground">{currentExercise.label.split("(")[1]?.replace(")", "") || "Total"}</span></div>
                     </div>
-                    <div className="bg-secondary/20 p-4 rounded-lg flex flex-col justify-center border">
+                    <div className="bg-secondary/20 p-4 rounded-none flex flex-col justify-center border">
                         <span className="text-xs text-muted-foreground uppercase tracking-wider font-semibold mb-1">Active Days</span>
                         <div className="text-2xl font-bold">{stats.activeDaysCount} <span className="text-sm font-normal text-muted-foreground">Days</span></div>
                     </div>
                 </div>
-                <div className="md:col-span-2 border py-2 px-4 rounded-lg overflow-hidden h-full">
+                <div className="md:col-span-2 border py-2 px-4 rounded-none overflow-hidden h-full">
                     <StreakCard
                         compact
                         streak={streak}

@@ -23,7 +23,7 @@ const SetRow = ({ label, value, placeholder, onChange, onRemove }: Props) => {
         placeholder={placeholder}
         min="0"
         onChange={(e) => onChange(e.target.value)}
-        className="border-primary/20 bg-background/50"
+        className="border-primary/20 bg-background/50 rounded-md"
       />
 
       {onRemove && (
@@ -31,7 +31,7 @@ const SetRow = ({ label, value, placeholder, onChange, onRemove }: Props) => {
           variant="ghost"
           size="icon"
           onClick={onRemove}
-          className="text-red-500 hover:text-red-700"
+          className="text-red-500 hover:text-red-700 rounded-md"
         >
           <Trash className="h-4 w-4" />
         </Button>

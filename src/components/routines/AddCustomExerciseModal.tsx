@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import CornerElements from "../CornerElements";
 
 interface Props {
   open: boolean;
@@ -34,7 +35,8 @@ const AddCustomExerciseModal = ({ open, onClose, onSubmit, prefilledName }: Prop
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-      <div className="bg-background rounded-xl w-full max-w-md p-6 border border-border">
+      <div className="bg-background rounded-none w-full max-w-md p-6 border border-border relative overflow-hidden">
+        <CornerElements />
         <h2 className="text-lg font-bold mb-4">Add Custom Exercise</h2>
 
         <div className="space-y-4">

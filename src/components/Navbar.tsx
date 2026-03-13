@@ -10,18 +10,17 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "./ui/button";
+import Image from "next/image";
 
 const Navbar = () => {
   const { isSignedIn } = useUser();
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-background/60 backdrop-blur-md border-b border-border py-3">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-background/60 backdrop-blur-none border-b border-border py-3">
       <div className="container mx-auto flex items-center justify-between">
         {/* LOGO */}
         <Link href="/" className="flex items-center gap-2">
-          <div className="p-1 bg-primary/10 rounded">
-            <ZapIcon className="w-4 h-4 text-primary" />
-          </div>
+          <Image src="/logo.png" alt="Logo" width={36} height={36} className="p-0.5 bg-primary/10 rounded-full" />
           <span className="text-xl font-bold font-mono">
             Fit<span className="text-primary">max</span>.ai
           </span>

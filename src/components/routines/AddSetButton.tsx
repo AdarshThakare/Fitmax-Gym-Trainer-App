@@ -11,7 +11,7 @@ const AddSetButton = ({ onClick }: Props) => {
       onClick={onClick}
       variant="outline"
       size="sm"
-      className="w-full mt-4 border-primary/20 hover:border-primary"
+      className="w-full mt-4 border-primary/20 hover:border-primary rounded-md"
     >
       <Plus className="h-4 w-4 mr-2" />
       Add Set

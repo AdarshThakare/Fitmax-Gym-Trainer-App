@@ -1,5 +1,6 @@
 import React, { useMemo } from "react";
 import ReactECharts from "echarts-for-react";
+import CornerElements from "../CornerElements";
 
 interface Routine {
     customSetsDetail?: {
@@ -65,7 +66,7 @@ const CustomActivityPieChart = ({ routines }: Props) => {
                 radius: ["40%", "70%"],
                 avoidLabelOverlap: false,
                 itemStyle: {
-                    borderRadius: 10,
+                    borderRadius: 0,
                     borderColor: "transparent",
                     borderWidth: 2
                 },
@@ -100,7 +101,8 @@ const CustomActivityPieChart = ({ routines }: Props) => {
     };
 
     return (
-        <div className="bg-card w-full rounded-xl border shadow-sm p-4 relative flex flex-col items-center">
+        <div className="bg-card w-full rounded-none border shadow-sm p-4 relative flex flex-col items-center overflow-hidden">
+            <CornerElements />
             <h3 className="text-lg font-bold tracking-tight text-center mb-4">
                 Custom Volume Distribution
             </h3>

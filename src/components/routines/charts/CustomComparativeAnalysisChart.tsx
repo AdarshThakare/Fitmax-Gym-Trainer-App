@@ -1,5 +1,6 @@
 import React, { useMemo } from "react";
 import ReactECharts from "echarts-for-react";
+import CornerElements from "../CornerElements";
 
 interface Routine {
     date: string;
@@ -46,7 +47,7 @@ const CustomComparativeAnalysisChart = ({ routines }: Props) => {
         const topExercises = allExerciseNames.slice(0, 6); // Take up to 6
 
         if (topExercises.length === 0) {
-             return null; // Return null spec to handle empty state gracefully if needed, or fallback
+             return null; 
         }
 
         const indicators = topExercises.map(name => {
@@ -71,6 +72,7 @@ const CustomComparativeAnalysisChart = ({ routines }: Props) => {
         while (yesterdayValues.length < indicators.length) { yesterdayValues.push(0); }
 
         return {
+            backgroundColor: "transparent",
             tooltip: {
                 trigger: "item",
                 backgroundColor: "rgba(17, 24, 39, 0.8)",
@@ -118,7 +120,8 @@ const CustomComparativeAnalysisChart = ({ routines }: Props) => {
 
     if (!chartOptions || Object.keys(chartOptions).length === 0) {
         return (
-             <div className="bg-card w-full rounded-xl border shadow-sm p-4 relative flex flex-col items-center">
+             <div className="bg-card w-full rounded-none border shadow-sm p-4 relative flex flex-col items-center overflow-hidden">
+                <CornerElements />
                 <div className="flex w-full items-center justify-between mb-2">
                     <h3 className="text-lg font-bold tracking-tight">Today vs Yesterday</h3>
                 </div>
@@ -131,7 +134,8 @@ const CustomComparativeAnalysisChart = ({ routines }: Props) => {
     }
 
     return (
-        <div className="bg-card w-full rounded-xl border shadow-sm p-4 relative flex flex-col items-center">
+        <div className="bg-card w-full rounded-none border shadow-sm p-4 relative flex flex-col items-center overflow-hidden h-full">
+            <CornerElements />
             <div className="flex w-full items-center justify-between mb-2">
                 <h3 className="text-lg font-bold tracking-tight">Today vs Yesterday</h3>
             </div>
