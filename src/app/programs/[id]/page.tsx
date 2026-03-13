@@ -232,7 +232,7 @@ const ProgramDetailPage = () => {
         <CornerElements />
 
         <Tabs defaultValue="workout" className="w-full">
-          <TabsList className="mb-8 w-full grid grid-cols-2 bg-background/50 border border-border rounded-lg p-1">
+          <TabsList className="mb-8 w-full grid grid-cols-2 bg-background/50 rounded-lg p-1">
             <TabsTrigger
               value="workout"
               className="rounded-md py-4 font-mono text-[10px] tracking-[0.3em] data-[state=active]:bg-primary/20 data-[state=active]:text-primary border-transparent data-[state=active]:border-primary/40 uppercase"

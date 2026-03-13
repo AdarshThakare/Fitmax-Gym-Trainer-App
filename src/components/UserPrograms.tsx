@@ -29,7 +29,7 @@ const UserPrograms = () => {
           {/* HEADER BAR */}
           <div className="flex items-center justify-between px-5 py-3 border-b border-border bg-background/70">
             <div className="flex items-center gap-2">
-              <div className="w-2.5 h-2.5 rounded-none bg-primary"></div>
+              <div className="w-2.5 h-2.5 rounded-full bg-primary"></div>
               <span className="text-sm text-primary font-medium">
                 Program Gallery
               </span>
