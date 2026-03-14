@@ -6,7 +6,8 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "sync:android": "next build && npx cap sync android"
   },
   "dependencies": {
     "@capacitor/android": "^7.6.0",

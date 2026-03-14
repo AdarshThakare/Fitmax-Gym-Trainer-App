@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AppleIcon, CalendarIcon, DumbbellIcon } from "lucide-react";
 import StreakCard from "@/components/routines/StreakCard";
+import ActivityPieChart from "@/components/routines/charts/ActivityPieChart";
 
 import { useStreak } from "@/hooks/useStreak";
 import { usePerformanceStats } from "@/hooks/usePerformanceStats";
@@ -63,23 +64,31 @@ const ProfilePage = () => {
     <section className="relative z-10 pt-12 pb-32 grow container mx-auto px-4">
       <ProfileHeader user={user} />
       {!isLoading ? (
-        <div>
+        <div className="space-y-8">
+
+          {/* ---- ANALYTICS SECTION — always visible ---- */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Streak Calendar — spans 2 cols */}
+            <div className="lg:col-span-2">
+              <StreakCard
+                streak={streak}
+                lastActiveDate={lastActiveDate}
+                monthlyActivity={monthlyActivity as Record<string, Record<number, boolean>>}
+                dailyLogCounts={dailyLogCounts as Record<string, number>}
+              />
+            </div>
+            {/* Performance Radar */}
+            <div className="lg:col-span-1">
+              <PerformanceRadarChart stats={perfStats} />
+            </div>
+          </div>
+
+          {/* Activity Distribution Pie Chart */}
+          <ActivityPieChart routines={routines || []} />
+
+          {/* ---- PLANS SECTION ---- */}
           {allPlans && allPlans?.length > 0 ? (
             <div className="space-y-8">
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div className="lg:col-span-2">
-                  <StreakCard
-                    streak={streak}
-                    lastActiveDate={lastActiveDate}
-                    monthlyActivity={monthlyActivity as Record<string, Record<number, boolean>>}
-                    dailyLogCounts={dailyLogCounts as Record<string, number>}
-                  />
-                </div>
-                <div className="lg:col-span-1">
-                  <PerformanceRadarChart stats={perfStats} />
-                </div>
-              </div>
-
               {/* PLAN SELECTOR */}
               <div className="relative backdrop-blur-sm border border-border p-6 rounded-none overflow-hidden">
                 <CornerElements />
@@ -123,7 +132,6 @@ const ProfilePage = () => {
               </div>
 
               {/* PLAN DETAILS */}
-
               {currentPlan && (
                 <div className="relative backdrop-blur-sm border border-border rounded-none p-6 overflow-hidden">
                   <CornerElements />
