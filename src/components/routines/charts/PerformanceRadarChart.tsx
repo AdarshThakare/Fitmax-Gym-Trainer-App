@@ -10,7 +10,7 @@ interface Props {
 const PerformanceRadarChart = ({ stats }: Props) => {
   const option = {
     backgroundColor: "transparent",
-    color: ["#3b82f6", "#10b981", "#6366f1"],
+    color: ["#3b82f6", "#10b981", "#ff5900ff"],
     tooltip: {
       trigger: "item",
       backgroundColor: "rgba(17, 24, 39, 0.8)",
