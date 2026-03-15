@@ -54,31 +54,18 @@ const Navbar = () => {
                   <span>{link.label}</span>
                 </Link>
               ))}
-              <Button
-                asChild
-                variant="outline"
-                className="ml-2 border-primary/50 text-primary hover:text-white hover:bg-primary/10 rounded-md"
-              >
-                <Link href="/generate-program">Get Started</Link>
-              </Button>
+
               <UserButton />
             </>
           ) : (
             <>
-              <SignInButton>
-                <Button
-                  variant={"outline"}
-                  className="border-primary/50 text-primary hover:text-white hover:bg-primary/10 rounded-md"
-                >
-                  Sign In
-                </Button>
-              </SignInButton>
-
-              <SignUpButton>
-                <Button className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-md">
-                  Sign Up
-                </Button>
-              </SignUpButton>
+              <>
+                <SignUpButton>
+                  <Button className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-md">
+                    Get Started
+                  </Button>
+                </SignUpButton>
+              </>
             </>
           )}
         </nav>
@@ -133,22 +120,10 @@ const Navbar = () => {
                   </>
                 ) : (
                   <div className="flex flex-col gap-4 mt-4">
-                    <SignInButton>
-                      <Button
-                        variant={"outline"}
-                        className="w-full py-6 border-primary/50 text-primary text-lg rounded-md"
-                        onClick={() => setIsMenuOpen(false)}
-                      >
-                        Sign In
-                      </Button>
-                    </SignInButton>
 
                     <SignUpButton>
-                      <Button
-                        className="w-full py-6 bg-primary text-primary-foreground text-lg rounded-md"
-                        onClick={() => setIsMenuOpen(false)}
-                      >
-                        Sign Up
+                      <Button className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-md">
+                        Get Started
                       </Button>
                     </SignUpButton>
                   </div>
