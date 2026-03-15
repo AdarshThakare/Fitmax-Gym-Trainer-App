@@ -10,6 +10,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { formatDate } from "date-fns";
+import { Send, MessageSquareText } from "lucide-react";
+import { Input } from "@/components/ui/input";
 
 type ChatMessage = { role: "assistant" | "user"; content: string };
 
@@ -23,6 +25,8 @@ export default function GenerateProgramPage() {
   const [userIsSpeaking, setUserIsSpeaking] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [callEnded, setCallEnded] = useState(false);
+  const [textInput, setTextInput] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
   const { user, isLoaded } = useUser();
   const router = useRouter();
@@ -36,9 +40,6 @@ export default function GenerateProgramPage() {
   const savedRef = useRef(false);
 
 
-  if (!vapiRef.current && publicKey) {
-    vapiRef.current = new Vapi(publicKey);
-  }
 
   const fullName = useMemo(() => {
     const first = user?.firstName?.trim();
@@ -180,7 +181,18 @@ export default function GenerateProgramPage() {
     };
 
     const handleError = (error: any) => {
-      console.error("Vapi error:", error);
+      console.error("Vapi error observed:", error);
+      let errMsg = "An unexpected error occurred with the voice assistant.";
+      if (typeof error === "string") errMsg = error;
+      else if (error?.message) errMsg = error.message;
+      else if (error) {
+        try {
+          errMsg = JSON.stringify(error, null, 2);
+        } catch {
+          errMsg = String(error);
+        }
+      }
+      setError(errMsg);
       setConnecting(false);
       setCallActive(false);
       setIsSpeaking(false);
@@ -219,6 +231,10 @@ export default function GenerateProgramPage() {
     setConnecting(true);
     setMessages([]);
     setCallEnded(false);
+    setError(null);
+
+    console.log("Starting call with Assistant ID:", assistantId);
+    console.log("Using Public Key:", publicKey ? "Present" : "Missing");
 
     await vapi.start(assistantId, {
 
@@ -248,12 +264,51 @@ export default function GenerateProgramPage() {
     if (!isLoaded) return;
 
     try {
+      // Basic Mic Check
+      if (typeof navigator !== "undefined" && navigator.mediaDevices) {
+        try {
+          await navigator.mediaDevices.getUserMedia({ audio: true });
+        } catch (micErr: any) {
+          setError("Microphone access denied. Please allow microphone permissions to use voice generation.");
+          setConnecting(false);
+          return;
+        }
+      }
+
       await startCall();
-    } catch (err) {
-      console.error("Failed to start call:", err);
+    } catch (err: any) {
+      console.error("Failed to start call catch block:", err);
+      setError(err?.message || "Failed to connect to the voice assistant. Please check your internet and API keys.");
       setConnecting(false);
     }
   }, [callActive, callEnded, connecting, endCall, isLoaded, startCall]);
+
+  const handleSendMessage = useCallback(async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!textInput.trim() || !callActive) return;
+
+    const vapi = vapiRef.current;
+    if (!vapi) return;
+
+    const messageContent = textInput.trim();
+    setTextInput("");
+
+    // Update local messages state immediately
+    setMessages((prev) => [...prev, { role: "user", content: messageContent }]);
+
+    try {
+      // Send the message to Vapi
+      vapi.send({
+        type: "add-message",
+        message: {
+          role: "user",
+          content: messageContent,
+        },
+      });
+    } catch (err) {
+      console.error("Failed to send message to Vapi:", err);
+    }
+  }, [callActive, textInput]);
 
   return (
     <div className="flex flex-col min-h-screen text-foreground overflow-hidden pb-6 pt-24">
@@ -266,6 +321,11 @@ export default function GenerateProgramPage() {
           <p className="text-muted-foreground mt-2">
             Have a voice conversation with our AI assistant to create your personalized plan
           </p>
+          {error && (
+            <div className="mt-4 p-3 bg-destructive/10 border border-destructive/20 text-destructive rounded-md text-sm animate-fadeIn">
+              <strong>Error: </strong> {error}
+            </div>
+          )}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
@@ -410,6 +470,34 @@ export default function GenerateProgramPage() {
               )}
             </div>
           </div>
+        )}
+
+        {callActive && (
+          <form
+            onSubmit={handleSendMessage}
+            className="w-full flex gap-2 mb-8 animate-fadeIn"
+          >
+            <div className="relative flex-1 group">
+              <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                <MessageSquareText className="size-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+              </div>
+              <Input
+                value={textInput}
+                onChange={(e) => setTextInput(e.target.value)}
+                placeholder="Type your response to Fitmax AI..."
+                className="pl-10 py-6 bg-card/50 backdrop-blur-sm border-border hover:border-primary/50 focus:border-primary group-focus-within:ring-1 group-focus-within:ring-primary/20 transition-all rounded-md"
+                disabled={!callActive || callEnded}
+              />
+            </div>
+            <Button
+              type="submit"
+              size="icon"
+              className="size-[52px] rounded-md bg-primary hover:bg-primary/90 text-white transition-all hover:scale-105 active:scale-95"
+              disabled={!textInput.trim() || !callActive || callEnded}
+            >
+              <Send className="size-5" />
+            </Button>
+          </form>
         )}
 
         <div className="w-full flex justify-center gap-4">

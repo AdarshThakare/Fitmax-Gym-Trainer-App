@@ -83,8 +83,6 @@ const ProfilePage = () => {
             </div>
           </div>
 
-          {/* Activity Distribution Pie Chart */}
-          <ActivityPieChart routines={routines || []} />
 
           {/* ---- PLANS SECTION ---- */}
           {allPlans && allPlans?.length > 0 ? (
